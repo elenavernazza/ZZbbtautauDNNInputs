@@ -1,0 +1,105 @@
+[evernazza@llruicms01 DNNTraining]$ pip install onnx
+Defaulting to user installation because normal site-packages is not writeable
+Collecting onnx
+  Using cached onnx-1.14.0.tar.gz (11.3 MB)
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Installing backend dependencies ... done
+  Preparing metadata (pyproject.toml) ... done
+Requirement already satisfied: numpy in /grid_mnt/vol_home/llr/cms/evernazza/.local/lib/python3.6/site-packages (from onnx) (1.19.5)
+Collecting protobuf>=3.20.2
+  Using cached protobuf-4.21.0-py3-none-any.whl (291 kB)
+Requirement already satisfied: typing-extensions>=3.6.2.1 in /grid_mnt/vol_home/llr/cms/evernazza/.local/lib/python3.6/site-packages (from onnx) (3.7.4.3)
+WARNING: The candidate selected for download or install is a yanked version: 'protobuf' candidate (version 4.21.0 at https://files.pythonhosted.org/packages/27/82/986065ef305c0989c99d8ef3f29e58a03fac6e64bb2c36ffe64500cc6955/protobuf-4.21.0-py3-none-any.whl#sha256=4e78116673ba04e01e563f6a9cca2c72db0be8a3e1629094816357e81cc39d36 (from https://pypi.org/simple/protobuf/))
+Reason for being yanked: Required python version not configured correctly (https://github.com/protocolbuffers/protobuf/issues/10076)
+Building wheels for collected packages: onnx
+  Building wheel for onnx (pyproject.toml) ... error
+  ERROR: Command errored out with exit status 1:
+   command: /bin/python3 /usr/local/lib/python3.6/site-packages/pip/_vendor/pep517/in_process/_in_process.py build_wheel /tmp/tmpth0auabb
+       cwd: /tmp/pip-install-ob3i66_1/onnx_02dee2e7ffe24b2fa1bfc95e346152ef
+  Complete output (80 lines):
+  fatal: Not a git repository (or any of the parent directories): .git
+  running bdist_wheel
+  running build
+  running build_py
+  running create_version
+  running cmake_build
+  Using cmake args: ['/usr/bin/cmake3', '-DPYTHON_INCLUDE_DIR=/usr/include/python3.6m', '-DPYTHON_EXECUTABLE=/bin/python3', '-DBUILD_ONNX_PYTHON=ON', '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON', '-DONNX_NAMESPACE=onnx', '-DPY_EXT_SUFFIX=.cpython-36m-x86_64-linux-gnu.so', '-DCMAKE_BUILD_TYPE=Release', '-DONNX_ML=1', '/tmp/pip-install-ob3i66_1/onnx_02dee2e7ffe24b2fa1bfc95e346152ef']
+  -- The C compiler identification is GNU 4.8.5
+  -- The CXX compiler identification is GNU 4.8.5
+  -- Check for working C compiler: /usr/bin/cc
+  -- Check for working C compiler: /usr/bin/cc - works
+  -- Detecting C compiler ABI info
+  -- Detecting C compiler ABI info - done
+  -- Detecting C compile features
+  -- Detecting C compile features - done
+  -- Check for working CXX compiler: /usr/bin/c++
+  -- Check for working CXX compiler: /usr/bin/c++ - works
+  -- Detecting CXX compiler ABI info
+  -- Detecting CXX compiler ABI info - done
+  -- Detecting CXX compile features
+  -- Detecting CXX compile features - done
+  -- Found PythonInterp: /bin/python3 (found version "3.6.8")
+  -- Found PythonLibs: //lib64/libpython3.6m.so (found version "3.6.8")
+  Generated: /tmp/pip-install-ob3i66_1/onnx_02dee2e7ffe24b2fa1bfc95e346152ef/.setuptools-cmake-build/onnx/onnx-ml.proto
+  CMake Error at CMakeLists.txt:303 (message):
+    Protobuf compiler not found
+  Call Stack (most recent call first):
+    CMakeLists.txt:334 (relative_protobuf_generate_cpp)
+  
+  
+  -- Configuring incomplete, errors occurred!
+  See also "/tmp/pip-install-ob3i66_1/onnx_02dee2e7ffe24b2fa1bfc95e346152ef/.setuptools-cmake-build/CMakeFiles/CMakeOutput.log".
+  Traceback (most recent call last):
+    File "/usr/local/lib/python3.6/site-packages/pip/_vendor/pep517/in_process/_in_process.py", line 363, in <module>
+      main()
+    File "/usr/local/lib/python3.6/site-packages/pip/_vendor/pep517/in_process/_in_process.py", line 345, in main
+      json_out['return_val'] = hook(**hook_input['kwargs'])
+    File "/usr/local/lib/python3.6/site-packages/pip/_vendor/pep517/in_process/_in_process.py", line 262, in build_wheel
+      metadata_directory)
+    File "/tmp/pip-build-env-wbgbzhol/overlay/lib/python3.6/site-packages/setuptools/build_meta.py", line 231, in build_wheel
+      wheel_directory, config_settings)
+    File "/tmp/pip-build-env-wbgbzhol/overlay/lib/python3.6/site-packages/setuptools/build_meta.py", line 215, in _build_with_temp_dir
+      self.run_setup()
+    File "/tmp/pip-build-env-wbgbzhol/overlay/lib/python3.6/site-packages/setuptools/build_meta.py", line 268, in run_setup
+      self).run_setup(setup_script=setup_script)
+    File "/tmp/pip-build-env-wbgbzhol/overlay/lib/python3.6/site-packages/setuptools/build_meta.py", line 158, in run_setup
+      exec(compile(code, __file__, 'exec'), locals())
+    File "setup.py", line 365, in <module>
+      "backend-test-tools = onnx.backend.test.cmd_tools:main",
+    File "/tmp/pip-build-env-wbgbzhol/overlay/lib/python3.6/site-packages/setuptools/__init__.py", line 153, in setup
+      return distutils.core.setup(**attrs)
+    File "/usr/lib64/python3.6/distutils/core.py", line 148, in setup
+      dist.run_commands()
+    File "/usr/lib64/python3.6/distutils/dist.py", line 955, in run_commands
+      self.run_command(cmd)
+    File "/usr/lib64/python3.6/distutils/dist.py", line 974, in run_command
+      cmd_obj.run()
+    File "/tmp/pip-build-env-wbgbzhol/overlay/lib/python3.6/site-packages/wheel/bdist_wheel.py", line 299, in run
+      self.run_command('build')
+    File "/usr/lib64/python3.6/distutils/cmd.py", line 313, in run_command
+      self.distribution.run_command(command)
+    File "/usr/lib64/python3.6/distutils/dist.py", line 974, in run_command
+      cmd_obj.run()
+    File "/usr/lib64/python3.6/distutils/command/build.py", line 135, in run
+      self.run_command(cmd_name)
+    File "/usr/lib64/python3.6/distutils/cmd.py", line 313, in run_command
+      self.distribution.run_command(command)
+    File "/usr/lib64/python3.6/distutils/dist.py", line 974, in run_command
+      cmd_obj.run()
+    File "setup.py", line 236, in run
+      self.run_command("cmake_build")
+    File "/usr/lib64/python3.6/distutils/cmd.py", line 313, in run_command
+      self.distribution.run_command(command)
+    File "/usr/lib64/python3.6/distutils/dist.py", line 974, in run_command
+      cmd_obj.run()
+    File "setup.py", line 222, in run
+      subprocess.check_call(cmake_args)
+    File "/usr/lib64/python3.6/subprocess.py", line 311, in check_call
+      raise CalledProcessError(retcode, cmd)
+  subprocess.CalledProcessError: Command '['/usr/bin/cmake3', '-DPYTHON_INCLUDE_DIR=/usr/include/python3.6m', '-DPYTHON_EXECUTABLE=/bin/python3', '-DBUILD_ONNX_PYTHON=ON', '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON', '-DONNX_NAMESPACE=onnx', '-DPY_EXT_SUFFIX=.cpython-36m-x86_64-linux-gnu.so', '-DCMAKE_BUILD_TYPE=Release', '-DONNX_ML=1', '/tmp/pip-install-ob3i66_1/onnx_02dee2e7ffe24b2fa1bfc95e346152ef']' returned non-zero exit status 1.
+  ----------------------------------------
+  ERROR: Failed building wheel for onnx
+Failed to build onnx
+ERROR: Could not build wheels for onnx, which is required to install pyproject.toml-based projects
+
