@@ -37,7 +37,7 @@ if __name__ == "__main__" :
     run_name = options.run
 
     basedir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeights/'
-    weight_dir = basedir + 'ensemble'
+    weight_dir = basedir + 'ensemble/'
 
     ensemble_0 = Ensemble.from_save(weight_dir + f'selected_set_0_{run_name}')
     ensemble_1 = Ensemble.from_save(weight_dir + f'selected_set_1_{run_name}')
@@ -58,9 +58,9 @@ if __name__ == "__main__" :
 
     plot_binary_class_pred(df, savename=odir+"Overall")
 
-    print('Tau Tau')
-    plot_binary_class_pred(df[df.pairType==0], density=True, savename=odir+"tauTau")
-    print('Mu Tau')
-    plot_binary_class_pred(df[df.pairType==1], density=True, savename=odir+"muTau")
+    print('\nMu Tau')
+    plot_binary_class_pred(df[df.pairType==0], density=True, savename=odir+"muTau")
     print('E Tau')
-    plot_binary_class_pred(df[df.pairType==2], density=True, savename=odir+"eTau")
+    plot_binary_class_pred(df[df.pairType==1], density=True, savename=odir+"eTau")
+    print('Tau Tau')
+    plot_binary_class_pred(df[df.pairType==2], density=True, savename=odir+"tauTau")
