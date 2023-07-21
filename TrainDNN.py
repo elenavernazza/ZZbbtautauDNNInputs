@@ -89,3 +89,6 @@ if __name__ == "__main__" :
     savename = outdir + '/Feat_Importance'
     _ = ensemble.get_feat_importance(train_fy, savename=savename)
     ensemble[0][1].head.plot_embeds()
+
+    # remove automatically created useless folder
+    os.system('rm -r /data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/train_weights')
