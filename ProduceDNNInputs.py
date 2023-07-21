@@ -247,6 +247,13 @@ if __name__ == "__main__" :
     except:
         print(" ### INFO: Skipping plots")
 
+    plt.figure(figsize=(40, 35))
+    corr_sig = Events[cont_feat].corr()
+    sns.heatmap(corr_sig, annot=True, xticklabels=cont_feat, yticklabels=cont_feat, cmap="PiYG")
+    plt.xticks(fontsize=50)
+    plt.yticks(fontsize=50)
+    plt.savefig(odir + '/TrainFeat_CorrMatrix.pdf')
+
     ######################### Saving #########################
 
     print(" ### INFO: Saving inputs to fold files")
