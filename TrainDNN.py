@@ -22,6 +22,7 @@ if __name__ == "__main__" :
     print(" ### INFO: Using device {}".format(num))
     torch.cuda.set_device(int(num))
     torch.cuda.get_device_name()
+    torch.cuda.empty_cache()
 
     indir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeights/DNNInputs'
     print(" ### INFO: Reading data from {}".format(indir))
@@ -48,7 +49,7 @@ if __name__ == "__main__" :
     print(" ### INFO: Build model")
 
     n_out = 1
-    model_builder = ModelBuilder(objective, cont_feats=train_fy.cont_feats, n_out=n_out,
+    model_builder = ModelBuilder(objective, cont_feats=train_fy.cont_feats, n_out=n_out, cat_embedder=cat_embedder,
                                 body=body, opt_args=opt_args)
     Model(model_builder)
 
