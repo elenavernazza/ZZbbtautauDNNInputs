@@ -18,14 +18,14 @@ def FancyHisto(h, type, num = None):
             h.SetLineColor(ROOT.kAzure)
     else:
         if num == -1: h.SetLineColor(ROOT.kBlack);    h.SetLineStyle(1)
-        if num == 0:  h.SetLineColor(ROOT.kAzure);    h.SetLineStyle(2)
-        if num == 1:  h.SetLineColor(ROOT.kGreen);    h.SetLineStyle(3)
-        if num == 2:  h.SetLineColor(ROOT.kYellow);   h.SetLineStyle(4)
-        if num == 3:  h.SetLineColor(ROOT.kOrange+1); h.SetLineStyle(5)
-        if num == 4:  h.SetLineColor(ROOT.kRed);      h.SetLineStyle(6)
-        if num == 5:  h.SetLineColor(ROOT.kRed);      h.SetLineStyle(7)
-        if num == 6:  h.SetLineColor(ROOT.kPurle);    h.SetLineStyle(8)
-        if num == 7:  h.SetLineColor(ROOT.kBlue);     h.SetLineStyle(9)
+        if num == 0:  h.SetLineColor(ROOT.kAzure);    h.SetLineStyle(1)
+        if num == 1:  h.SetLineColor(ROOT.kGreen);    h.SetLineStyle(1)
+        if num == 2:  h.SetLineColor(ROOT.kYellow);   h.SetLineStyle(1)
+        if num == 3:  h.SetLineColor(ROOT.kOrange+1); h.SetLineStyle(1)
+        if num == 4:  h.SetLineColor(ROOT.kRed);      h.SetLineStyle(1)
+        if num == 5:  h.SetLineColor(ROOT.kRed);      h.SetLineStyle(1)
+        if num == 6:  h.SetLineColor(ROOT.kViolet);   h.SetLineStyle(1)
+        if num == 7:  h.SetLineColor(ROOT.kBlue);     h.SetLineStyle(1)
     return 1
 
 def AddText(leftmargin = 0.10, rightmargin = 0.10, pass1K = False):
@@ -196,10 +196,9 @@ if __name__ == "__main__" :
             c1 = ROOT.TCanvas("c1","c1",800,800)
             c1.SetGrid(10,10)
             c1.SetLeftMargin(0.14)
-            if i == 0:
-                FancyHisto(h_sig[j], 'sig')
-                h_sig[j].GetYaxis().SetTitle("entries")
-                h_sig[j].GetXaxis().SetTitle(features[feat_name]['Name'])
+            FancyHisto(h_sig[j], 'sig')
+            h_sig[j].GetYaxis().SetTitle("entries")
+            h_sig[j].GetXaxis().SetTitle(features[feat_name]['Name'])
             h_sig[j].Draw()
             FancyHisto(h_bkg[i][j], 'bkg')
             h_bkg[i][j].Draw("SAME")
@@ -251,6 +250,7 @@ if __name__ == "__main__" :
     # loop on the features
     for j, feat_name in enumerate(features.keys()):
 
+        sig_int = h_sig[j].Integral()
         h_sig_norm = h_sig[j]
         h_sig_norm.Scale(1.0 / h_sig[j].Integral())
         FancyHisto(h_sig_norm, 'sig', num = -1)
@@ -261,11 +261,10 @@ if __name__ == "__main__" :
         Legend = ROOT.TLegend(0.65,0.68,0.88,0.88)
         Legend.SetBorderSize(0)
         Legend.AddEntry(h_sig_norm , "Signal", "LPE")
-        sig_int = h_sig[j].Integral()
 
         k = 0
         for i, bkg_name in enumerate(bkg_list):
-            if h_bkg[i][j].Integral() < 0.1*sig_int: continue
+            if h_bkg[i][j].Integral() < 2*sig_int: continue
             print("\n\n ### INFO: Plotting", bkg_name)
             k += 1
             h_bkg_norm = h_bkg[i][j]
@@ -276,13 +275,14 @@ if __name__ == "__main__" :
 
         Legend.Draw()
 
-        AddText(leftmargin = 0.14, pass1K = (y_max >= 100))
+        AddText(leftmargin = 0.14)
 
         bkg_out_dir = outdir + '/sig_vs_all'
         os.system('mkdir -p ' + bkg_out_dir)
         os.system('cp ' + outdir + '/index.php ' + bkg_out_dir)
         c.SaveAs(bkg_out_dir + '/Feature_Norm_%s.png' %(feat_name))
         c.SaveAs(bkg_out_dir + '/Feature_Norm_%s.pdf' %(feat_name))
+        del h_sig_norm, h_bkg_norm
     del c 
 
 
