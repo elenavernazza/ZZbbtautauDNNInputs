@@ -57,14 +57,21 @@ if __name__ == "__main__" :
     data_dir = '/data_CMS/cms/vernazza/cmt/Categorization/ul_2018_ZZ_v10/'
     stat_dir = '/data_CMS/cms/vernazza/cmt/MergeCategorizationStats/ul_2018_ZZ_v10/'
 
+    in_feat   = ['event',
+                'dnn_CvsB_b1', 'dnn_CvsL_b1', 'ZZKinFit_chi2', 'ZZKinFit_mass', 'Ztt_mass',
+                'dnn_dR_l1_l2_x_sv_pT', 'dnn_dau1_mt', 'dau2_pt', 'dnn_dR_l1_l2', 'dnn_dphi_sv_met', 'Zbb_mass',
+                'dnn_HHbtag_b2', 'ZZ_svfit_mass', 'dnn_dphi_Zbb_sv', 'Zbb_pt', 'dnn_dR_l1_l2_boosted_Ztt_met',
+                'dau1_pt', 'dnn_bjet1_pt', 'dnn_Phi', 'dnn_costheta_l2_Zttmet',
+                'isBoosted', 'pairType', 'VBFjet1_JetIdx', 'VBFjet2_JetIdx', 'dnn_HHbtag_vbf1', 'dnn_HHbtag_vbf2']
+    weights   = ['genWeight', 'puWeight', 'prescaleWeight', 'trigSF', 'L1PreFiringWeight_Nom', 'PUjetID_SF']
+
     cont_feat = ['dnn_CvsB_b1', 'dnn_CvsL_b1', 'ZZKinFit_chi2', 'ZZKinFit_mass', 'Ztt_mass',
                 'dnn_dR_l1_l2_x_sv_pT', 'dnn_dau1_mt', 'dau2_pt', 'dnn_dR_l1_l2', 'dnn_dphi_sv_met', 'Zbb_mass',
                 'dnn_HHbtag_b2', 'ZZ_svfit_mass', 'dnn_dphi_Zbb_sv', 'Zbb_pt', 'dnn_dR_l1_l2_boosted_Ztt_met',
                 'dau1_pt', 'dnn_bjet1_pt', 'dnn_Phi', 'dnn_costheta_l2_Zttmet']
-    cat_feat  = ['isBoosted', 'pairType', 'dnn_deepFlav1', 'dnn_deepFlav2', 'VBFjet1_JetIdx']
-    weights   = ['genWeight', 'puWeight', 'prescaleWeight', 'trigSF', 'L1PreFiringWeight_Nom', 'PUjetID_SF']
+    cat_feat  = ['isBoosted', 'pairType', 'isVBF', 'year'] # 'jet_1_quality', 'jet_2_quality']
 
-    features = cont_feat + cat_feat + weights + ['event']
+    features = in_feat + weights
 
     ######################### Import imputs #########################
 
@@ -85,6 +92,7 @@ if __name__ == "__main__" :
     df_sig['gen_weight'] = df_sig['genWeight'] * df_sig['puWeight']
     df_sig['cor_weight'] = df_sig['prescaleWeight'] * df_sig['trigSF'] * df_sig['L1PreFiringWeight_Nom'] * df_sig['PUjetID_SF']
     df_sig['weight']     = sig_XS/nweightedevents * df_sig['gen_weight'] * df_sig['cor_weight']
+    df_sig['isVBF']      = df_sig['VBFjet1_JetIdx'] >= 0
     df_sig['sample']     = sig_sample
     del data_frames
 
@@ -131,6 +139,7 @@ if __name__ == "__main__" :
         df_bkg['gen_weight'] = df_bkg['genWeight'] * df_bkg['puWeight']
         df_bkg['cor_weight'] = df_bkg['prescaleWeight'] * df_bkg['trigSF'] * df_bkg['L1PreFiringWeight_Nom'] * df_bkg['PUjetID_SF']
         df_bkg['weight']     = bkg_samples_dict[bkg_sample]/nweightedevents * df_bkg['gen_weight'] * df_bkg['cor_weight']
+        df_bkg['isVBF']      = df_bkg['VBFjet1_JetIdx'] >= 0
         df_bkg['sample']     = bkg_sample
         df_all_bkg = pd.concat([df_all_bkg, df_bkg], ignore_index=True)
         del data_frames
@@ -139,6 +148,7 @@ if __name__ == "__main__" :
     df_all_bkg.insert(0, 'Class', 1, True)
 
     Events = pd.concat([df_sig, df_all_bkg])
+    Events['year'] = 2018
 
     ######################### Print statistics #########################
 
@@ -234,14 +244,14 @@ if __name__ == "__main__" :
     try:
         a = PlotSettings(w_mid=10, b_mid=10, cat_palette='Set1', style={}, format='pdf')
         b = PlotSettings(w_mid=10, b_mid=10, cat_palette='Set1', style={}, format='png')
-        odir = '/eos/user/e/evernazz/www/ZZbbtautau/DNNFeaturePlots/LuminInputs/Inputs0'
+        wwwdir = '/eos/user/e/evernazz/www/ZZbbtautau/DNNFeaturePlots/LuminInputs/Inputs0'
         for feature in cont_feat:
-            save_name = odir + '/TrainFeat_' + feature
+            save_name = wwwdir + '/TrainFeat_' + feature
             plot_feat(set_0_train_weight, feature, cuts=[(set_0_train_weight.Class==0),(set_0_train_weight.Class==1)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=a)
             plot_feat(set_0_train_weight, feature, cuts=[(set_0_train_weight.Class==0),(set_0_train_weight.Class==1)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=b)
-        odir = '/eos/user/e/evernazz/www/ZZbbtautau/DNNFeaturePlots/LuminInputs/Inputs1'
+        wwwdir = '/eos/user/e/evernazz/www/ZZbbtautau/DNNFeaturePlots/LuminInputs/Inputs1'
         for feature in cont_feat:
-            save_name = odir + '/TrainFeat_' + feature
+            save_name = wwwdir + '/TrainFeat_' + feature
             plot_feat(set_1_train_weight, feature, cuts=[(set_1_train_weight.Class==0),(set_1_train_weight.Class==1)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=a)
             plot_feat(set_1_train_weight, feature, cuts=[(set_1_train_weight.Class==0),(set_1_train_weight.Class==1)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=b)
     except:
