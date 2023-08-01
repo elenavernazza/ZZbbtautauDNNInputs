@@ -37,7 +37,7 @@ if __name__ == "__main__" :
     run_name = options.run
     ch_name = 'zz_bbtt'
 
-    basedir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeights/'
+    basedir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeightsDefault/'
     weight_dir = basedir + 'ensemble/'
 
     print(" ### INFO: Import models")
@@ -63,7 +63,7 @@ if __name__ == "__main__" :
     write_ensemble_file(ensemble_1, ch_name, modeldir + '/ensemble_1/model_weights.txt')
 
     from lumin.nn.data.fold_yielder import FoldYielder
-    inpath = Path('/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeights/DNNInputs')
+    inpath = Path('/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeightsDefault/DNNInputs')
 
     train_0_fy = FoldYielder(inpath/'train_0.hdf5', input_pipe=f'{inpath}/input_pipe_0.pkl')
     train_1_fy = FoldYielder(inpath/'train_1.hdf5', input_pipe=f'{inpath}/input_pipe_1.pkl')

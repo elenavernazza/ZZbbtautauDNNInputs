@@ -24,12 +24,12 @@ if __name__ == "__main__" :
     torch.cuda.get_device_name()
     torch.cuda.empty_cache()
 
-    indir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeights/DNNInputs'
+    indir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeightsDefault/DNNInputs'
     print(" ### INFO: Reading data from {}".format(indir))
     inpath = Path(indir)
     train_fy = FoldYielder(inpath/f'train_{num}.hdf5', input_pipe=inpath/f'input_pipe_{num}.pkl')
 
-    basedir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeights/'
+    basedir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeightsDefault/'
     os.system("mkdir -p " + basedir)
     outdir = basedir + f'train_weights_{num}'
     os.system("mkdir -p " + outdir)
