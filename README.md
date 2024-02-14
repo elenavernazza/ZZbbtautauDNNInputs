@@ -5,20 +5,29 @@ The DNN training is performed by targeting the ZZ signal sample against all the 
 The events are selected to enter:
 - baseline selections
 - Signal Region (OS and Medium working point for tau isolation)
-- Elliptical mass cut, here re-optimized to target ZZ instead of HH
+- Elliptical mass cut, here re-optimized to target ZZ/ZH instead of HH
 
-You might need to create the working folder before running the scripts:
+## Prepare environment
+
 ```
-mkdir DNNWeightsDefault
+git clone git@github.com:elenavernazza/ZZbbtautauDNNInputs.git
+cd ZZbbtautauDNNInputs
+git clone git@github.com:JohanWulff/cms_runII_dnn_resonant.git
 ```
 
 ## Inputs
 
 The inputs are cretaed via the new Framework developed by Jaime: https://github.com/elenavernazza/hhbbtt-analysis
+The information about the cross section is read in the config file and saved into the `CrossSection.json` file.
+
+```
+python3 GetSamplesConfig.py
+```
+
 The ntuples are converted to hdf5 files for the DNN training.
 
 ```
-python3 ProduceDNNInputs.py
+python3 ProduceDNNInputs.py --out DNNWeight_M300
 ```
 
 Inside the script, the events are weighted by the cross section, the generator level weights and the detector related weights. The negative weights are removed.
@@ -72,3 +81,7 @@ Once the environment is set it is possible to save the model.
 ```
 python3 SaveDNN.py --name <model_name>
 ```
+
+python3 GetSamplesConfig.py
+
+python3 ProduceDNNInputs.py --sig ggXZZbbtt_M300 --bkg zz_sl_signal,dy,tt_dl,tt_sl,tt_fh,wjets,ttw_lnu,ttw_qq,ttww,ttwz,ttwh,ttzh,ttz_llnunu,ttz_qq,ttzz,tth_bb,tth_nonbb,tth_tautau,zh_hbb_zll,wplush_htt,wminush_htt,ggH_ZZ,ggf_sm,zz_dl,zz_sl_background,zz_lnu,zz_qnu,wz_lllnu,wz_lnuqq,wz_llqq,wz_lnununu,ww_llnunu,ww_lnuqq,ww_qqqq,zzz,wzz,www,wwz,ewk_z,ewk_wplus,ewk_wminus,st_tw_antitop,st_tw_top,st_antitop,st_top

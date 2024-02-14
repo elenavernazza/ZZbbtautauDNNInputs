@@ -14,6 +14,7 @@ if __name__ == "__main__" :
     parser = OptionParser()
     parser.add_option("--run",       dest="run",      default='0')
     parser.add_option("--num",       dest="num",      default='0')
+    parser.add_option("--out",       dest="out",      default='DNNWeight_0')
     (options, args) = parser.parse_args()
 
     run_name = options.run
@@ -24,12 +25,12 @@ if __name__ == "__main__" :
     torch.cuda.get_device_name()
     torch.cuda.empty_cache()
 
-    indir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeightsDefault/DNNInputs'
+    indir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/'+options.out+'/DNNInputs'
     print(" ### INFO: Reading data from {}".format(indir))
     inpath = Path(indir)
     train_fy = FoldYielder(inpath/f'train_{num}.hdf5', input_pipe=inpath/f'input_pipe_{num}.pkl')
 
-    basedir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeightsDefault/'
+    basedir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/'+options.out+'/'
     os.system("mkdir -p " + basedir)
     outdir = basedir + f'train_weights_{num}'
     os.system("mkdir -p " + outdir)

@@ -48,109 +48,131 @@ def balance_weights(df:pd.DataFrame) -> None:
     check_weights(df_copy)
     return df_copy
 
+in_feat   = ['event', 
+                'hh_kinfit_chi2', 'hh_kinfit_m', 'sv_mass', 'dR_l1_l2_x_sv_pT', 'l_1_mt', 'l_2_pT', 'dR_l1_l2',
+                'dphi_sv_met', 'h_bb_mass', 'b_2_hhbtag', 'diH_mass_sv', 'dphi_hbb_sv', 'h_bb_pT', 
+                'dR_l1_l2_boosted_htt_met', 'l_1_pT', 'b_1_pT', 'phi', 'costheta_l2_httmet', 
+                'b_1_cvsb', 'b_1_cvsl', 'boosted', 'channel', 'is_vbf', 'jet_1_quality', 'jet_2_quality', 'year']
+weights   = ['genWeight', 'puWeight', 'prescaleWeight', 'trigSF', 'PUjetID_SF']
+# weights   = ['genWeight', 'puWeight', 'prescaleWeight', 'trigSF', 'L1PreFiringWeight_Nom', 'PUjetID_SF']
+
+cont_feat = ['hh_kinfit_chi2', 'hh_kinfit_m', 'sv_mass', 'dR_l1_l2_x_sv_pT', 'l_1_mt', 'l_2_pT', 'dR_l1_l2',
+                'dphi_sv_met', 'h_bb_mass', 'b_2_hhbtag', 'diH_mass_sv', 'dphi_hbb_sv', 'h_bb_pT', 
+                'dR_l1_l2_boosted_htt_met', 'l_1_pT', 'b_1_pT', 'phi', 'costheta_l2_httmet', 'b_1_cvsb', 'b_1_cvsl']
+cat_feat  = ['boosted', 'channel', 'is_vbf', 'jet_1_quality', 'jet_2_quality', 'year']
+
+features = in_feat + weights
+
+    # 'zz_sl_background': 5.52*0.954, ########## [FIXME]
+
 #######################################################################
 ######################### SCRIPT BODY #################################
 #######################################################################
 
-# no environment needed
+# no environment needed, only seteos
+# python3 ProduceDNNInputs.py --out DNNWeight_ZZbbtt_0 --sig zz_sl_signal
+# python3 ProduceDNNInputs.py --out DNNWeight_ZbbHtt_0 --sig zh_zbb_htt_signal
+# python3 ProduceDNNInputs.py --out DNNWeight_ZttHbb_0 --sig zh_ztt_hbb_signal
 
 if __name__ == "__main__" :
+
+    from optparse import OptionParser
+    parser = OptionParser()
+    parser.add_option("--out",       dest="out",      default='DNNWeight_0')
+    parser.add_option("--sig",       dest="sig",      default='zz_sl_signal')
+    parser.add_option("--bkg",       dest="bkg",      default='all')
+    parser.add_option("--json",      dest="json",     default='CrossSection.json')
+    parser.add_option("--prd",       dest="prd",      default='prod_230828_DNN_Ellipse80_SR_FullFeatSet')
+    parser.add_option("--cat",       dest="cat",      default='cat_ZZ_elliptical_cut_80_sr')
+    parser.add_option("--eos",       dest="eos",      default=None)
+    (options, args) = parser.parse_args()
+
+    ######################### Define inputs #########################
+
+    json_path = options.json
+    if not os.path.exists(json_path): sys.exit(" ### ERROR: Cross Section json file doesn't exist. Exiting.\n")
+    with open(json_path, 'r') as json_file:
+        xs_dict = json.load(json_file)
+
+    sig_name = options.sig
+    print(" ### INFO: Signal is", sig_name)
+    if not sig_name in xs_dict.keys(): sys.exit(" ### ERROR: Signal Sample not defined in json file. Exiting.\n")
+    if options.bkg == 'all': 
+        bkg_names = [key for key in xs_dict.keys() if key != sig_name]
+    else: 
+        bkg_names = [key for key in options.bkg.split(',') if key in xs_dict.keys()]
+    print(" ### INFO: Backgrounds are", bkg_names)
+
+    ######################### Define output ########################
+
+    odir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/'+options.out+'/DNNInputs'
+    if os.path.isdir(odir):
+        print(" ### INFO: Output directory already existing")
+        for i in range(0,10):
+            odir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/'+options.out+'.{}'.format(i)+'/DNNInputs'
+            if not os.path.isdir(odir):
+                break
+    os.system('mkdir -p ' + odir)
+    print(" ### INFO: Saving output in", odir)
+
+    ######################### Read inputs #########################
 
     data_dir = '/data_CMS/cms/vernazza/cmt/Categorization/ul_2018_ZZ_v10/'
     stat_dir = '/data_CMS/cms/vernazza/cmt/MergeCategorizationStats/ul_2018_ZZ_v10/'
 
-    in_feat   = ['event', 
-                 'hh_kinfit_chi2', 'hh_kinfit_m', 'sv_mass', 'dR_l1_l2_x_sv_pT', 'l_1_mt', 'l_2_pT', 'dR_l1_l2',
-                 'dphi_sv_met', 'h_bb_mass', 'b_2_hhbtag', 'diH_mass_sv', 'dphi_hbb_sv', 'h_bb_pT', 
-                 'dR_l1_l2_boosted_htt_met', 'l_1_pT', 'b_1_pT', 'phi', 'costheta_l2_httmet', 
-                 'b_1_cvsb', 'b_1_cvsl', 'boosted', 'channel', 'is_vbf', 'jet_1_quality', 'jet_2_quality', 'year']
-    weights   = ['genWeight', 'puWeight', 'prescaleWeight', 'trigSF', 'L1PreFiringWeight_Nom', 'PUjetID_SF']
-
-    cont_feat = ['hh_kinfit_chi2', 'hh_kinfit_m', 'sv_mass', 'dR_l1_l2_x_sv_pT', 'l_1_mt', 'l_2_pT', 'dR_l1_l2',
-                 'dphi_sv_met', 'h_bb_mass', 'b_2_hhbtag', 'diH_mass_sv', 'dphi_hbb_sv', 'h_bb_pT', 
-                 'dR_l1_l2_boosted_htt_met', 'l_1_pT', 'b_1_pT', 'phi', 'costheta_l2_httmet', 'b_1_cvsb', 'b_1_cvsl']
-    cat_feat  = ['boosted', 'channel', 'is_vbf', 'jet_1_quality', 'jet_2_quality', 'year']
-
-    features = in_feat + weights
-
-    ######################### Import imputs #########################
-
-    sig_sample = 'zz_sl_signal'
-    sig_XS = 5.52 * 0.046
-    files_sig = glob.glob(data_dir + sig_sample + '/cat_ZZ_elliptical_cut_80_sr/prod_DNN_Ellipse80_SR_FullFeatSet/data_*.root')
-    print(" ### INFO: Reading signal samples for", sig_sample)
+    files_sig = glob.glob(data_dir + sig_name + '/' + options.cat + '/' + options.prd + '/data_*.root')
+    print(" ### INFO: Reading signal samples for", sig_name)
     data_frames = [read_root_file(filename, 'Events', features) for filename in files_sig]
     df_sig = pd.concat(data_frames, ignore_index=True)
-    stat_file = stat_dir + sig_sample + '_aux/prod_230718/stats.json'
+    stat_file_aux = stat_dir + sig_name + '_aux/prod_231005/stats.json'
+    stat_file = stat_dir + sig_name + '/prod_231005/stats.json'
+    if os.path.exists(stat_file_aux): stat_file = stat_file_aux
     with open(stat_file, "r") as f: 
         data = json.load(f)
         nevents = data['nevents']
         nweightedevents = data['nweightedevents']
-    df_sig['xs']         = sig_XS
+    df_sig['xs']         = xs_dict[sig_name]
     df_sig['nev']        = nevents
     df_sig['nev_w']      = nweightedevents
     df_sig['gen_weight'] = df_sig['genWeight'] * df_sig['puWeight']
-    df_sig['cor_weight'] = df_sig['prescaleWeight'] * df_sig['trigSF'] * df_sig['L1PreFiringWeight_Nom'] * df_sig['PUjetID_SF']
-    df_sig['weight']     = sig_XS/nweightedevents * df_sig['gen_weight'] * df_sig['cor_weight']
-    df_sig['sample']     = sig_sample
+    # df_sig['cor_weight'] = df_sig['prescaleWeight'] * df_sig['trigSF'] * df_sig['L1PreFiringWeight_Nom'] * df_sig['PUjetID_SF']
+    df_sig['cor_weight'] = df_sig['prescaleWeight'] * df_sig['trigSF'] * df_sig['PUjetID_SF']
+    df_sig['weight']     = xs_dict[sig_name]/nweightedevents * df_sig['gen_weight'] * df_sig['cor_weight']
+    df_sig['sample']     = sig_name
     del data_frames
 
-    bkg_samples_dict = { 
-        'dy': 6077.22,
-        'ggf_sm': 0.03105,
-        'st_antitop': 80.95,
-        'st_top': 136.02,
-        'st_tw_antitop': 35.85,
-        'st_tw_top': 35.85,
-        'tt_dl': 88.29,
-        'tt_fh': 377.96,
-        'tth_bb': 0.2953,
-        'tth_nonbb': 0.17996,
-        'tth_tautau': 0.031805,
-        'tt_sl': 365.34, 
-        'wjets': 61526.7, 
-        'zz_dl': 1.26, 
-        'zz_fh': 3.262, 
-        'zz_lnu': 0.564, 
-        'zz_qnu': 4.07, 
-        'zz_sl_background': 5.52*0.954,
-        'zzz': 0.0147
-    }
-    
     df_all_bkg = pd.DataFrame()
-    for bkg_sample in bkg_samples_dict.keys():
-        files_bkg = glob.glob(data_dir + bkg_sample + '/cat_ZZ_elliptical_cut_80_sr/prod_DNN_Ellipse80_SR_FullFeatSet/data_*.root')
-        # if '/data_CMS/cms/vernazza/cmt/PreprocessRDF/ul_2018_ZZ_v10_backup/wjets/cat_base_selection/prod_DNN_Ellipse80/data_2.root' in files_bkg:
-        #     files_bkg.remove('/data_CMS/cms/vernazza/cmt/PreprocessRDF/ul_2018_ZZ_v10_backup/wjets/cat_base_selection/prod_DNN_Ellipse80/data_2.root')
-        # if '/data_CMS/cms/vernazza/cmt/PreprocessRDF/ul_2018_ZZ_v10_backup/wjets/cat_base_selection/prod_DNN_Ellipse80/data_1.root' in files_bkg:
-        #     files_bkg.remove('/data_CMS/cms/vernazza/cmt/PreprocessRDF/ul_2018_ZZ_v10_backup/wjets/cat_base_selection/prod_DNN_Ellipse80/data_1.root')
-        print(" ### INFO: Reading background samples for", bkg_sample)
+    for bkg_name in bkg_names:
+        files_bkg = glob.glob(data_dir + bkg_name + '/' + options.cat + '/' + options.prd + '/data_*.root')
+        print(" ### INFO: Reading background samples for", bkg_name)
         data_frames = [read_root_file(filename, 'Events', features) for filename in files_bkg]
         df_bkg = pd.concat(data_frames, ignore_index=True)
-        stat_file = stat_dir + bkg_sample + '_aux/prod_230718/stats.json' if bkg_sample != 'dy' else stat_dir + 'dy_nlo_aux/prod_230718/stats.json'
+        stat_file_aux = stat_dir + bkg_name + '_aux/prod_231005/stats.json' if bkg_name != 'dy' else stat_dir + 'dy_nlo_aux/prod_231005/stats.json'
+        stat_file = stat_dir + bkg_name + '/prod_231005/stats.json'
+        if os.path.exists(stat_file_aux): stat_file = stat_file_aux
         with open(stat_file, "r") as f: 
             data = json.load(f)
             nevents = data['nevents']
             nweightedevents = data['nweightedevents']
-        df_bkg['xs']         = bkg_samples_dict[bkg_sample]
+        df_bkg['xs']         = xs_dict[bkg_name]
         df_bkg['nev']        = nevents
         df_bkg['nev_w']      = nweightedevents
         df_bkg['gen_weight'] = df_bkg['genWeight'] * df_bkg['puWeight']
-        df_bkg['cor_weight'] = df_bkg['prescaleWeight'] * df_bkg['trigSF'] * df_bkg['L1PreFiringWeight_Nom'] * df_bkg['PUjetID_SF']
-        df_bkg['weight']     = bkg_samples_dict[bkg_sample]/nweightedevents * df_bkg['gen_weight'] * df_bkg['cor_weight']
-        df_bkg['sample']     = bkg_sample
+        # df_bkg['cor_weight'] = df_bkg['prescaleWeight'] * df_bkg['trigSF'] * df_bkg['L1PreFiringWeight_Nom'] * df_bkg['PUjetID_SF']
+        df_bkg['cor_weight'] = df_bkg['prescaleWeight'] * df_bkg['trigSF'] * df_bkg['PUjetID_SF']
+        df_bkg['weight']     = xs_dict[bkg_name]/nweightedevents * df_bkg['gen_weight'] * df_bkg['cor_weight']
+        df_bkg['sample']     = bkg_name
         df_all_bkg = pd.concat([df_all_bkg, df_bkg], ignore_index=True)
         del data_frames
 
-    df_sig.insert(0, 'Class', 0, True)
-    df_all_bkg.insert(0, 'Class', 1, True)
+    df_sig.insert(0, 'Class', 1, True)
+    df_all_bkg.insert(0, 'Class', 0, True)
 
     Events = pd.concat([df_sig, df_all_bkg])
-    Events['year'] = 2018
 
     ######################### Print statistics #########################
 
-    print(' ### INFO: Signal size = \t\t',len(df_sig))
+    print(' ### INFO: Signal size = \t',len(df_sig))
     print(' ### INFO: Background size = \t', len(df_all_bkg))
 
     ss = sorted(Events['sample'].unique())
@@ -208,13 +230,10 @@ if __name__ == "__main__" :
     ######################### Split even and odd #########################
 
     print(" ### INFO: Split into even and odd event numbers")
-    Events['year'] = 2018
     df_0 = Events[Events['event']%2 == 0] # even event numbers
     df_1 = Events[Events['event']%2 != 0] # odd event numbers
 
     print(" ### INFO: Save DataFrames")
-    odir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeightsDefault/DNNInputs'
-    os.system('mkdir -p ' + odir)
     savepath = Path(odir)
     input_pipe_0 = fit_input_pipe(df_0, cont_feat, savepath/f'input_pipe_0')
     input_pipe_1 = fit_input_pipe(df_1, cont_feat, savepath/f'input_pipe_1')
@@ -239,21 +258,23 @@ if __name__ == "__main__" :
 
     ######################### Plotting inputs #########################
 
-    try:
-        a = PlotSettings(w_mid=10, b_mid=10, cat_palette='Set1', style={}, format='pdf')
-        b = PlotSettings(w_mid=10, b_mid=10, cat_palette='Set1', style={}, format='png')
+    import matplotlib
+    matplotlib.rcParams['pdf.fonttype'] = 42
+    matplotlib.rcParams['ps.fonttype'] = 42
+    a = PlotSettings(w_mid=10, b_mid=10, cat_palette='Set1', style={}, format='pdf')
+    b = PlotSettings(w_mid=10, b_mid=10, cat_palette='Set1', style={}, format='png')
+
+    if options.eos != None:
         wwwdir = '/eos/user/e/evernazz/www/ZZbbtautau/DNNFeaturePlots/LuminInputsDefault/Inputs0'
         for feature in cont_feat:
             save_name = wwwdir + '/TrainFeat_' + feature
-            plot_feat(set_0_train_weight, feature, cuts=[(set_0_train_weight.Class==0),(set_0_train_weight.Class==1)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=a)
-            plot_feat(set_0_train_weight, feature, cuts=[(set_0_train_weight.Class==0),(set_0_train_weight.Class==1)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=b)
+            plot_feat(set_0_train_weight, feature, cuts=[(set_0_train_weight.Class==1),(set_0_train_weight.Class==0)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=a)
+            plot_feat(set_0_train_weight, feature, cuts=[(set_0_train_weight.Class==1),(set_0_train_weight.Class==0)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=b)
         wwwdir = '/eos/user/e/evernazz/www/ZZbbtautau/DNNFeaturePlots/LuminInputsDefault/Inputs1'
         for feature in cont_feat:
             save_name = wwwdir + '/TrainFeat_' + feature
-            plot_feat(set_1_train_weight, feature, cuts=[(set_1_train_weight.Class==0),(set_1_train_weight.Class==1)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=a)
-            plot_feat(set_1_train_weight, feature, cuts=[(set_1_train_weight.Class==0),(set_1_train_weight.Class==1)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=b)
-    except:
-        print(" ### INFO: Skipping plots")
+            plot_feat(set_1_train_weight, feature, cuts=[(set_1_train_weight.Class==1),(set_1_train_weight.Class==0)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=a)
+            plot_feat(set_1_train_weight, feature, cuts=[(set_1_train_weight.Class==1),(set_1_train_weight.Class==0)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=b)
 
     plt.figure(figsize=(40, 35))
     corr_sig = Events[cont_feat].corr()
@@ -267,20 +288,16 @@ if __name__ == "__main__" :
     print(" ### INFO: Saving inputs to fold files")
     df2foldfile(df=set_0_train_weight, n_folds=10,
                 cont_feats=cont_feat, cat_feats=cat_feat, targ_feats='Class', wgt_feat='weight',
-                misc_feats=['channel', 'sample', 'original_weight'],
                 savename=savepath/'train_0', targ_type='int')
     
     df2foldfile(df=set_1_train_weight, n_folds=10,
             cont_feats=cont_feat, cat_feats=cat_feat, targ_feats='Class', wgt_feat='weight',
-            misc_feats=['channel', 'sample', 'original_weight'],
             savename=savepath/'train_1', targ_type='int')
     
     df2foldfile(df=set_0_test, n_folds=10,
             cont_feats=cont_feat, cat_feats=cat_feat, targ_feats='Class', wgt_feat='weight',
-            misc_feats=['channel', 'sample', 'original_weight'],
             savename=savepath/'test_0', targ_type='int')
     
     df2foldfile(df=set_1_test, n_folds=10,
             cont_feats=cont_feat, cat_feats=cat_feat, targ_feats='Class', wgt_feat='weight',
-            misc_feats=['channel', 'sample', 'original_weight'],
             savename=savepath/'test_1', targ_type='int')

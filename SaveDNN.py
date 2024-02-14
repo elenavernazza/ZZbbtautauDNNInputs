@@ -32,19 +32,20 @@ if __name__ == "__main__" :
     parser = OptionParser()
     parser.add_option("--run",       dest="run",      default='0')
     parser.add_option("--name",      dest="name",     default='model')
+    parser.add_option("--out",       dest="out",      default='DNNWeight_0')
     (options, args) = parser.parse_args()
 
     run_name = options.run
     ch_name = 'zz_bbtt'
 
-    basedir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeightsDefault/'
+    basedir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/'+options.out+'/'
     weight_dir = basedir + 'ensemble/'
 
     print(" ### INFO: Import models")
     ensemble_0 = Ensemble.from_save(weight_dir + f'/selected_set_0_{run_name}')
     ensemble_1 = Ensemble.from_save(weight_dir + f'/selected_set_1_{run_name}')
 
-    modeldir = basedir + '/' + options.name + '_' + run_name
+    modeldir = basedir + '/' + options.name + '-' + run_name
     os.system('mkdir -p ' + modeldir)
     
     if not os.path.exists(modeldir + '/ensemble_0/'):
@@ -63,7 +64,7 @@ if __name__ == "__main__" :
     write_ensemble_file(ensemble_1, ch_name, modeldir + '/ensemble_1/model_weights.txt')
 
     from lumin.nn.data.fold_yielder import FoldYielder
-    inpath = Path('/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/DNNWeightsDefault/DNNInputs')
+    inpath = Path('/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/'+options.out+'/DNNInputs')
 
     train_0_fy = FoldYielder(inpath/'train_0.hdf5', input_pipe=f'{inpath}/input_pipe_0.pkl')
     train_1_fy = FoldYielder(inpath/'train_1.hdf5', input_pipe=f'{inpath}/input_pipe_1.pkl')
@@ -76,5 +77,9 @@ if __name__ == "__main__" :
     feats = cont_feats + cat_feats
 
     write_feat_file(feats, modeldir+'/features.txt')
+
+    bbtt = '/grid_mnt/data__data.polcms/cms/vernazza/FrameworkNanoAOD/hhbbtt-analysis/'
+    outdir = bbtt + 'nanoaod_base_analysis/data/cmssw/CMSSW_12_3_0_pre6/src/cms_runII_dnn_models/models/arc_checks/zz_bbtt/'
+    os.system('cp -r ' + modeldir + ' ' + outdir)
 
     print(" ### INFO: Done!")
