@@ -8,6 +8,19 @@ import torch
 ######################### SCRIPT BODY #################################
 #######################################################################
 
+# to be run on llrai machines
+
+'''
+python3 TrainDNN.py --out DNNWeight_ZZbbtt_0 --run 0 --num 0
+python3 TrainDNN.py --out DNNWeight_ZZbbtt_0 --run 0 --num 1
+
+python3 TrainDNN.py --out DNNWeight_ZbbHtt_0 --run 0 --num 0
+python3 TrainDNN.py --out DNNWeight_ZbbHtt_0 --run 0 --num 1
+ 
+python3 TrainDNN.py --out DNNWeight_ZttHbb_0 --run 0 --num 0
+python3 TrainDNN.py --out DNNWeight_ZttHbb_0 --run 0 --num 1
+'''
+
 if __name__ == "__main__" :
 
     from optparse import OptionParser

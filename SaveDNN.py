@@ -26,6 +26,14 @@ def write_feat_file(feats, savename:Union[str,Path]) -> None:
 # To run:
 # conda activate lumin_3.7
 
+'''
+python3 SaveDNN.py --out DNNWeight_ZZbbtt_0 --run 0 --name ZZbbtt
+
+python3 SaveDNN.py --out DNNWeight_ZbbHtt_0 --run 0 --name ZbbHtt
+ 
+python3 SaveDNN.py --out DNNWeight_ZttHbb_0 --run 0 --name ZttHbb
+'''
+
 if __name__ == "__main__" :
 
     from optparse import OptionParser

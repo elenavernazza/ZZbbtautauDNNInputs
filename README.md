@@ -20,14 +20,24 @@ git clone git@github.com:JohanWulff/cms_runII_dnn_resonant.git
 The inputs are cretaed via the new Framework developed by Jaime: https://github.com/elenavernazza/hhbbtt-analysis
 The information about the cross section is read in the config file and saved into the `CrossSection.json` file.
 
-```
+```bash
 python3 GetSamplesConfig.py
 ```
 
 The ntuples are converted to hdf5 files for the DNN training.
 
-```
-python3 ProduceDNNInputs.py --out DNNWeight_M300
+```bash
+python3 ProduceDNNInputs.py --out DNNWeight_ZZbbtt_0 --sig zz_sl_signal --bkg all --json CrossSectionZZ.json \
+ --base /data_CMS/cms/vernazza/cmt/ --ver ul_2018_ZZ_v10 \
+ --cat cat_ZZ_elliptical_cut_80_sr --prd prod_240207 --stat_prd prod_240128 --eos True
+
+python3 ProduceDNNInputs.py --out DNNWeight_ZbbHtt_0 --sig zh_zbb_htt_signal --bkg all --json CrossSectionZbbHtt.json \
+ --base /data_CMS/cms/cuisset/cmt/ --ver ul_2018_ZbbHtt_v10 \
+ --cat cat_ZbbHtt_elliptical_cut_90 --prd prod_240128 --stat_prd prod_240128 --eos True
+ 
+python3 ProduceDNNInputs.py --out DNNWeight_ZttHbb_0 --sig zh_ztt_hbb_signal --bkg all --json CrossSectionZttHbb.json \
+ --base /data_CMS/cms/cuisset/cmt/ --ver ul_2018_ZttHbb_v10 \
+ --cat cat_ZttHbb_elliptical_cut_90 --prd prod_240128 --stat_prd prod_240128 --eos True
 ```
 
 Inside the script, the events are weighted by the cross section, the generator level weights and the detector related weights. The negative weights are removed.
@@ -38,17 +48,25 @@ The event weight is then renormalized in order to give the same importance to th
 The training needs to be performed on machines with GPU. At LLR, use the llrai machine.
 Two trainings have to performed for the even and odd event numbers: they can be run at the same time, selecting the first GPU device for the first training and the second GPU device for the second training (already autmatically selected in the script).
 
-```
-python3 TrainDNN.py --num 0
-```
-```
-python3 TrainDNN.py --num 1
+```bash
+python3 TrainDNN.py --out DNNWeight_ZZbbtt_0 --run 0 --num 0
+python3 TrainDNN.py --out DNNWeight_ZZbbtt_0 --run 0 --num 1
+
+python3 TrainDNN.py --out DNNWeight_ZbbHtt_0 --run 0 --num 0
+python3 TrainDNN.py --out DNNWeight_ZbbHtt_0 --run 0 --num 1
+ 
+python3 TrainDNN.py --out DNNWeight_ZttHbb_0 --run 0 --num 0
+python3 TrainDNN.py --out DNNWeight_ZttHbb_0 --run 0 --num 1
 ```
 
 ## Testing
 
-```
-python3 TestDNN.py
+```bash
+python3 TestDNN.py --out DNNWeight_ZZbbtt_0 --run 0 
+
+python3 TestDNN.py --out DNNWeight_ZbbHtt_0 --run 0
+ 
+python3 TestDNN.py --out DNNWeight_ZttHbb_0 --run 0
 ```
 
 ## Export
@@ -56,7 +74,7 @@ python3 TestDNN.py
 The export is a delicate process and requires a particular environment. If these instructions are not followed, the exportation still works BUT the output has a format that cannot be used into the default analysis framework (.pb are not files, but folders).
 To create the environment:
 
-```
+```bash
 conda env create -f LuminEnv/lumin_3.7.yml
 conda activate lumin_3.7
 
@@ -78,8 +96,12 @@ pip install pathlib2
 
 Once the environment is set it is possible to save the model.
 
-```
-python3 SaveDNN.py --name <model_name>
+```bash
+python3 SaveDNN.py --out DNNWeight_ZZbbtt_0 --run 0 --name ZZbbtt
+
+python3 SaveDNN.py --out DNNWeight_ZbbHtt_0 --run 0 --name ZbbHtt
+ 
+python3 SaveDNN.py --out DNNWeight_ZttHbb_0 --run 0 --name ZttHbb
 ```
 
 python3 GetSamplesConfig.py
