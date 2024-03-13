@@ -81,6 +81,12 @@ ggXZZbbtt_M1000,ggXZZbbtt_M1100,ggXZZbbtt_M1200,ggXZZbbtt_M1300,ggXZZbbtt_M1400,
  --bkg all --json CrossSectionZZ.json \
  --base /data_CMS/cms/vernazza/cmt/ --ver ul_2018_ZZ_v10 \
  --cat cat_ZZ_elliptical_cut_80_sr --prd prod_240207 --stat_prd prod_231005 --eos True
+
+python3 ProduceDNNInputs.py --out ResTest2 \
+ --sig ggXZZbbtt_M200,ggXZZbbtt_M300 \
+ --bkg www --json CrossSectionZZ.json \
+ --base /data_CMS/cms/vernazza/cmt/ --ver ul_2018_ZZ_v10 \
+ --cat cat_ZZ_elliptical_cut_80_sr --prd prod_240207 --stat_prd prod_231005 --eos False
 '''
 
 if __name__ == "__main__" :
@@ -291,6 +297,27 @@ if __name__ == "__main__" :
     set_0_test[cont_feat] = input_pipe_1.transform(set_0_test[cont_feat].values.astype('float32'))
     set_1_test[cont_feat] = input_pipe_0.transform(set_1_test[cont_feat].values.astype('float32'))
 
+    # save one testing sample for each mass value
+    set_0_test_vector = []
+    set_1_test_vector = []
+    for sig_name in sig_names:
+        df_0_i_mass = df_0.copy()
+        df_1_i_mass = df_1.copy()
+        # drop all the other mass points and only keep the corresponding mass point for the signal
+        for sig_to_remove in sig_names:
+            if sig_to_remove == sig_name: pass
+            df_0_i_mass.drop(df_0_i_mass[df_0_i_mass['sample'] == sig_to_remove].index, inplace=True)
+            df_1_i_mass.drop(df_1_i_mass[df_1_i_mass['sample'] == sig_to_remove].index, inplace=True)
+        # set the background mass to that mass point
+        df_0_i_mass['mass'] = float(sig_name.split("M")[-1])
+        df_1_i_mass['mass'] = float(sig_name.split("M")[-1])
+
+        df_0_i_mass[cont_feat] = input_pipe_1.transform(df_0_i_mass[cont_feat].values.astype('float32'))
+        df_1_i_mass[cont_feat] = input_pipe_0.transform(df_1_i_mass[cont_feat].values.astype('float32'))
+
+        set_0_test_vector.append(df_0_i_mass)
+        set_1_test_vector.append(df_1_i_mass)
+
     ######################### Balance weigths #########################
 
     set_0_train_weight = balance_weights(set_0_train)
@@ -366,3 +393,12 @@ if __name__ == "__main__" :
     df2foldfile(df=set_1_test, n_folds=10,
             cont_feats=cont_feat, cat_feats=cat_feat, targ_feats='Class', wgt_feat='weight',
             savename=savepath/'test_1', targ_type='int')
+
+    for i, sig_name in enumerate(sig_names):
+        output_name = sig_name.split("_")[1]
+        df2foldfile(df=set_0_test_vector[i], n_folds=10,
+                cont_feats=cont_feat, cat_feats=cat_feat, targ_feats='Class', wgt_feat='weight',
+                savename=savepath/f'test_{output_name}_0', targ_type='int')
+        df2foldfile(df=set_1_test_vector[i], n_folds=10,
+                cont_feats=cont_feat, cat_feats=cat_feat, targ_feats='Class', wgt_feat='weight',
+                savename=savepath/f'test_{output_name}_1', targ_type='int')
