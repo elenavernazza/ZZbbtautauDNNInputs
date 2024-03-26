@@ -75,6 +75,7 @@ features = in_feat + weights
 # no environment needed, only seteos
 
 '''
+# 2018 ZZ first test
 python3 ProduceDNNInputs.py --out ResTest1 \
  --sig ggXZZbbtt_M200,ggXZZbbtt_M300,ggXZZbbtt_M400,ggXZZbbtt_M500,ggXZZbbtt_M600,ggXZZbbtt_M700,ggXZZbbtt_M800,ggXZZbbtt_M900,\
 ggXZZbbtt_M1000,ggXZZbbtt_M1100,ggXZZbbtt_M1200,ggXZZbbtt_M1300,ggXZZbbtt_M1400,ggXZZbbtt_M1500,ggXZZbbtt_M2000,ggXZZbbtt_M3000 \
@@ -87,6 +88,19 @@ python3 ProduceDNNInputs.py --out ResTest2 \
  --bkg www --json CrossSectionZZ.json \
  --base /data_CMS/cms/vernazza/cmt/ --ver ul_2018_ZZ_v10 \
  --cat cat_ZZ_elliptical_cut_80_sr --prd prod_240207 --stat_prd prod_231005 --eos False
+
+python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZbbHtt_0 \
+ --sig Zprime_Zh_Zbbhtautau_M500_v3,Zprime_Zh_Zbbhtautau_M1000_v3,Zprime_Zh_Zbbhtautau_M2000_v3,Zprime_Zh_Zbbhtautau_M3000_v3,Zprime_Zh_Zbbhtautau_M4000_v3 \
+ --bkg all --json CrossSectionZbbHtt.json \
+ --base /data_CMS/cms/cuisset/cmt/ --ver ul_2018_ZbbHtt_v12 \
+ --cat cat_ZbbHtt_elliptical_cut_90_sr --prd prod_240312_DNNinput --stat_prd prod_240305 --eos True
+
+python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZttHbb_0 \
+ --sig Zprime_Zh_Ztautauhbb_M500_v3,Zprime_Zh_Ztautauhbb_M1000_v3,Zprime_Zh_Ztautauhbb_M2000_v3,Zprime_Zh_Ztautauhbb_M3000_v3,Zprime_Zh_Ztautauhbb_M4000_v3 \
+ --bkg all --json CrossSectionZttHbb.json \
+ --base /data_CMS/cms/cuisset/cmt/ --ver ul_2018_ZttHbb_v12 \
+ --cat cat_ZttHbb_elliptical_cut_90_sr --prd prod_240312_DNNinput --stat_prd prod_240305 --eos True
+
 '''
 
 if __name__ == "__main__" :
@@ -151,65 +165,87 @@ if __name__ == "__main__" :
 
     ######################### Read inputs #########################
 
-    data_dir = options.base + '/Categorization/' + options.ver + '/'
-    stat_dir = options.base + '/MergeCategorizationStats/' + options.ver + '/'
-    print(' ### INFO: Reading datasets in {}'.format(data_dir))
-    print(' ### INFO: Reading normalization in {}'.format(stat_dir))
-
-    mass_points = []
+    if ',' in options.ver:
+        versions = options.ver.split(',')
+        if "ZZ" in options.ver:
+            o_name = 'ZZ_FullRun2'
+        elif "ZbbHtt" in options.ver:
+            o_name = 'ZbbHtt_FullRun2'
+        elif "ZttHbb" in options.ver:
+            o_name = 'ZttHbb_FullRun2'
+    else:
+        versions = [options.ver]
+        o_name = options.ver
 
     df_all_sig = pd.DataFrame()
-    for sig_name in sig_names:
-        files_sig = glob.glob(data_dir + sig_name + '/' + options.cat + '/' + options.prd + '/data_*.root')
-        mass = float(sig_name.split("M")[-1])
-        print(f" ### INFO: Reading signal samples for mass {mass} GeV :", data_dir + sig_name + '/' + options.cat + '/' + options.prd)
-        data_frames = [read_root_file(filename, 'Events', features) for filename in files_sig]
-        df_sig = pd.concat(data_frames, ignore_index=True)
-        stat_file_aux = stat_dir + sig_name + '_aux/' + options.stat_prd + '/stats.json'
-        stat_file = stat_dir + sig_name + '/' + options.stat_prd + '/stats.json'
-        if os.path.exists(stat_file_aux): stat_file = stat_file_aux
-        with open(stat_file, "r") as f: 
-            data = json.load(f)
-            nevents = data['nevents']
-            nweightedevents = data['nweightedevents']
-        df_sig['xs']         = xs_dict[sig_name]
-        df_sig['nev']        = nevents
-        df_sig['nev_w']      = nweightedevents
-        df_sig['gen_weight'] = df_sig['genWeight'] * df_sig['puWeight']
-        df_sig['cor_weight'] = df_sig['prescaleWeight'] * df_sig['trigSF'] * df_sig['PUjetID_SF'] # [FIXME] Add DYStitching
-        df_sig['weight']     = xs_dict[sig_name]/nweightedevents * df_sig['gen_weight'] * df_sig['cor_weight']
-        df_sig['sample']     = sig_name
-        df_sig['mass']       = mass
-        df_all_sig = pd.concat([df_all_sig, df_sig], ignore_index=True)
-        mass_points.append(mass)
-        del data_frames
-
     df_all_bkg = pd.DataFrame()
-    for bkg_name in bkg_names:
-        files_bkg = glob.glob(data_dir + bkg_name + '/' + options.cat + '/' + options.prd + '/data_*.root')
-        print(f" ### INFO: Reading background sample :", data_dir + bkg_name + '/' + options.cat + '/' + options.prd)
-        data_frames = [read_root_file(filename, 'Events', features) for filename in files_bkg]
-        df_bkg = pd.concat(data_frames, ignore_index=True)
-        if bkg_name != 'dy':
-            stat_file_aux = stat_dir + bkg_name + '_aux/' + options.stat_prd + '/stats.json'
-        else:
-            stat_dir + 'dy_nlo_aux/' + options.stat_prd + '/stats.json'
-        stat_file = stat_dir + bkg_name + '/' + options.stat_prd + '/stats.json'
-        if os.path.exists(stat_file_aux): stat_file = stat_file_aux
-        with open(stat_file, "r") as f: 
-            data = json.load(f)
-            nevents = data['nevents']
-            nweightedevents = data['nweightedevents']
-        df_bkg['xs']         = xs_dict[bkg_name]
-        df_bkg['nev']        = nevents
-        df_bkg['nev_w']      = nweightedevents
-        df_bkg['gen_weight'] = df_bkg['genWeight'] * df_bkg['puWeight']
-        df_bkg['cor_weight'] = df_bkg['prescaleWeight'] * df_bkg['trigSF'] * df_bkg['PUjetID_SF'] # [FIXME] Add DYStitching
-        df_bkg['weight']     = xs_dict[bkg_name]/nweightedevents * df_bkg['gen_weight'] * df_bkg['cor_weight']
-        df_bkg['sample']     = bkg_name
-        df_bkg['mass']       = random.choices(mass_points, k=len(df_bkg))
-        df_all_bkg = pd.concat([df_all_bkg, df_bkg], ignore_index=True)
-        del data_frames
+
+    for version in versions:
+
+        print('\n ***** INFO ***** : Reading version {}'.format(version))
+
+        data_dir = options.base + '/Categorization/' + version + '/'
+        stat_dir = options.base + '/MergeCategorizationStats/' + version + '/'
+        print(' ### INFO: Reading datasets in {}'.format(data_dir))
+        print(' ### INFO: Reading normalization in {}'.format(stat_dir))
+
+        mass_points = []
+
+        for sig_name in sig_names:
+            files_sig = glob.glob(data_dir + sig_name + '/' + options.cat + '/' + options.prd + '/data_*.root')
+            if "_v3" in sig_name: mass = float(sig_name.split("M")[-1].split("_v3")[0])
+            else: mass = float(sig_name.split("M")[-1])
+            print(f" ### INFO: Reading signal samples for mass {mass} GeV :", data_dir + sig_name + '/' + options.cat + '/' + options.prd)
+            data_frames = [read_root_file(filename, 'Events', features) for filename in files_sig]
+            df_sig = pd.concat(data_frames, ignore_index=True)
+            stat_file_aux = stat_dir + sig_name + '_aux/' + options.stat_prd + '/stats.json'
+            stat_file = stat_dir + sig_name + '/' + options.stat_prd + '/stats.json'
+            if os.path.exists(stat_file_aux): stat_file = stat_file_aux
+            with open(stat_file, "r") as f: 
+                data = json.load(f)
+                nevents = data['nevents']
+                nweightedevents = data['nweightedevents']
+            df_sig['xs']         = xs_dict[sig_name]
+            df_sig['nev']        = nevents
+            df_sig['nev_w']      = nweightedevents
+            df_sig['gen_weight'] = df_sig['genWeight'] * df_sig['puWeight']
+            df_sig['cor_weight'] = df_sig['prescaleWeight'] * df_sig['trigSF'] * df_sig['PUjetID_SF'] # [FIXME] Add DYStitching
+            df_sig['weight']     = xs_dict[sig_name]/nweightedevents * df_sig['gen_weight'] * df_sig['cor_weight']
+            df_sig['sample']     = sig_name
+            df_sig['mass']       = mass
+            df_all_sig = pd.concat([df_all_sig, df_sig], ignore_index=True)
+            mass_points.append(mass)
+            del data_frames
+
+        for bkg_name in bkg_names:
+            files_bkg = glob.glob(data_dir + bkg_name + '/' + options.cat + '/' + options.prd + '/data_*.root')
+            print(f" ### INFO: Reading background sample :", data_dir + bkg_name + '/' + options.cat + '/' + options.prd)
+            data_frames = [read_root_file(filename, 'Events', features) for filename in files_bkg]
+            try:
+                df_bkg = pd.concat(data_frames, ignore_index=True)
+            except:
+                print(" ### ERROR: Empty dataset")
+                continue
+            if bkg_name != 'dy':
+                stat_file_aux = stat_dir + bkg_name + '_aux/' + options.stat_prd + '/stats.json'
+            else:
+                stat_dir + 'dy_nlo_aux/' + options.stat_prd + '/stats.json'
+            stat_file = stat_dir + bkg_name + '/' + options.stat_prd + '/stats.json'
+            if os.path.exists(stat_file_aux): stat_file = stat_file_aux
+            with open(stat_file, "r") as f: 
+                data = json.load(f)
+                nevents = data['nevents']
+                nweightedevents = data['nweightedevents']
+            df_bkg['xs']         = xs_dict[bkg_name]
+            df_bkg['nev']        = nevents
+            df_bkg['nev_w']      = nweightedevents
+            df_bkg['gen_weight'] = df_bkg['genWeight'] * df_bkg['puWeight']
+            df_bkg['cor_weight'] = df_bkg['prescaleWeight'] * df_bkg['trigSF'] * df_bkg['PUjetID_SF'] # * df_bkg['DYstitchEasyWeight']
+            df_bkg['weight']     = xs_dict[bkg_name]/nweightedevents * df_bkg['gen_weight'] * df_bkg['cor_weight']
+            df_bkg['sample']     = bkg_name
+            df_bkg['mass']       = random.choices(mass_points, k=len(df_bkg))
+            df_all_bkg = pd.concat([df_all_bkg, df_bkg], ignore_index=True)
+            del data_frames
 
     df_all_sig.insert(0, 'Class', 1, True)
     df_all_bkg.insert(0, 'Class', 0, True)
@@ -305,12 +341,14 @@ if __name__ == "__main__" :
         df_1_i_mass = df_1.copy()
         # drop all the other mass points and only keep the corresponding mass point for the signal
         for sig_to_remove in sig_names:
-            if sig_to_remove == sig_name: pass
+            if sig_to_remove == sig_name: continue
             df_0_i_mass.drop(df_0_i_mass[df_0_i_mass['sample'] == sig_to_remove].index, inplace=True)
             df_1_i_mass.drop(df_1_i_mass[df_1_i_mass['sample'] == sig_to_remove].index, inplace=True)
         # set the background mass to that mass point
-        df_0_i_mass['mass'] = float(sig_name.split("M")[-1])
-        df_1_i_mass['mass'] = float(sig_name.split("M")[-1])
+        if "_v3" in sig_name: i_mass = float(sig_name.split("M")[-1].split("_v3")[0])
+        else: i_mass = float(sig_name.split("M")[-1])
+        df_0_i_mass['mass'] = float(i_mass)
+        df_1_i_mass['mass'] = float(i_mass)
 
         df_0_i_mass[cont_feat] = input_pipe_1.transform(df_0_i_mass[cont_feat].values.astype('float32'))
         df_1_i_mass[cont_feat] = input_pipe_0.transform(df_1_i_mass[cont_feat].values.astype('float32'))
@@ -331,20 +369,18 @@ if __name__ == "__main__" :
     a = PlotSettings(w_mid=10, b_mid=10, cat_palette='Set1', style={}, format='pdf')
     b = PlotSettings(w_mid=10, b_mid=10, cat_palette='Set1', style={}, format='png')
 
-    # pdb.set_trace()
-
     if options.eos != None:
-        print(" ### INFO: Plots saved to https://evernazz.web.cern.ch/evernazz/ZZbbtautau/ResDNNFeaturePlots/" + options.ver)
-        wwwdir = '/eos/home-e/evernazz/www/ZZbbtautau/ResDNNFeaturePlots/' + options.ver + '/Inputs0'
+        print(" ### INFO: Plots saved to https://evernazz.web.cern.ch/evernazz/ZZbbtautau/DNNResFeaturePlots/" + o_name)
+        wwwdir = '/eos/home-e/evernazz/www/ZZbbtautau/DNNResFeaturePlots/' + o_name + '/Inputs0'
         os.system('mkdir -p ' + wwwdir)
-        os.system('cp /eos/home-e/evernazz/www/index.php /eos/home-e/evernazz/www/ZZbbtautau/ResDNNFeaturePlots/' + options.ver)
+        os.system('cp /eos/home-e/evernazz/www/index.php /eos/home-e/evernazz/www/ZZbbtautau/DNNResFeaturePlots/' + o_name)
         os.system('cp /eos/home-e/evernazz/www/index.php ' + wwwdir)
         for feature in cont_feat:
             if feature == "mass": continue
             save_name = wwwdir + '/TrainFeat_' + feature
             plot_feat(set_0_train_weight, feature, cuts=[(set_0_train_weight.Class==1),(set_0_train_weight.Class==0)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=a)
             plot_feat(set_0_train_weight, feature, cuts=[(set_0_train_weight.Class==1),(set_0_train_weight.Class==0)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=b)
-        wwwdir = '/eos/home-e/evernazz/www/ZZbbtautau/ResDNNFeaturePlots/' + options.ver + '/Inputs1'
+        wwwdir = '/eos/home-e/evernazz/www/ZZbbtautau/DNNResFeaturePlots/' + options.ver + '/Inputs1'
         os.system('mkdir -p ' + wwwdir)
         os.system('cp /eos/home-e/evernazz/www/index.php ' + wwwdir)
         for feature in cont_feat:
@@ -395,7 +431,10 @@ if __name__ == "__main__" :
             savename=savepath/'test_1', targ_type='int')
 
     for i, sig_name in enumerate(sig_names):
-        output_name = sig_name.split("_")[1]
+        if '_v3' in sig_name:
+            output_name = "M" + sig_name.split("_M")[1].split("_v3")[0]
+        else:
+            output_name = sig_name.split("_")[1]
         df2foldfile(df=set_0_test_vector[i], n_folds=10,
                 cont_feats=cont_feat, cat_feats=cat_feat, targ_feats='Class', wgt_feat='weight',
                 savename=savepath/f'test_{output_name}_0', targ_type='int')

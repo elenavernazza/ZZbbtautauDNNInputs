@@ -28,17 +28,17 @@ if __name__ == "__main__" :
     run_name = options.run
     num = options.num
 
-    print(" ### INFO: Using device {}".format(num))
-    torch.cuda.set_device(int(num))
+    print(" ### INFO: Using device {}".format(int(num) + 2))
+    torch.cuda.set_device(int(num) + 2)
     torch.cuda.get_device_name()
     torch.cuda.empty_cache()
 
-    indir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/ResDNN/'+options.out+'/DNNInputs'
+    indir = os.getcwd()+'/'+options.out+'/DNNInputs'
     print(" ### INFO: Reading data from {}".format(indir))
     inpath = Path(indir)
     train_fy = FoldYielder(inpath/f'train_{num}.hdf5', input_pipe=inpath/f'input_pipe_{num}.pkl')
 
-    basedir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/ResDNN/'+options.out+'/'
+    basedir = os.getcwd()+'/'+options.out+'/'
     os.system("mkdir -p " + basedir)
     outdir = basedir + f'train_weights_{num}'
     os.system("mkdir -p " + outdir)
@@ -101,4 +101,4 @@ if __name__ == "__main__" :
     ensemble[0][1].head.plot_embeds()
 
     # remove automatically created useless folder
-    os.system('rm -r /data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/ResDNN/train_weights')
+    os.system('rm -r '+os.getcwd()+'/'+'/train_weights')
