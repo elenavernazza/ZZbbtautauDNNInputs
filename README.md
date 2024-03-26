@@ -9,11 +9,62 @@ The events are selected to enter:
 
 ## Prepare environment
 
-```
+```bash
 git clone git@github.com:elenavernazza/ZZbbtautauDNNInputs.git
 cd ZZbbtautauDNNInputs
 git clone git@github.com:JohanWulff/cms_runII_dnn_resonant.git
 ```
+
+For the Non-Resonant training, choose `NonResDNN`:
+```bash
+cd NonResDNN
+```
+
+<details>
+<summary>FullRun2 commands</summary>
+
+```bash
+python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZZbbtt_FullRun2_0 --sig zz_sl_signal --bkg all --json CrossSectionZZ.json \
+ --base /data_CMS/cms/vernazza/cmt/ --ver ul_2016_ZZ_v12,ul_2016_HIPM_ZZ_v12,ul_2017_ZZ_v12,ul_2018_ZZ_v12 \
+ --cat cat_ZZ_elliptical_cut_90_sr --prd prod_240318 --stat_prd prod_240305 --eos True
+python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZbbHtt_FullRun2_0 --sig zh_zbb_htt_signal --bkg all --json CrossSectionZbbHtt.json \
+ --base /data_CMS/cms/cuisset/cmt/ --ver ul_2016_ZbbHtt_v12,ul_2016_HIPM_ZbbHtt_v12,ul_2017_ZbbHtt_v12,ul_2018_ZbbHtt_v12 \
+ --cat cat_ZbbHtt_elliptical_cut_90_sr --prd prod_240312_DNNinput --stat_prd prod_240305 --eos True
+python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZttHbb_FullRun2_0 --sig zh_ztt_hbb_signal --bkg all --json CrossSectionZttHbb.json \
+ --base /data_CMS/cms/cuisset/cmt/ --ver ul_2016_ZttHbb_v12,ul_2016_HIPM_ZttHbb_v12,ul_2017_ZttHbb_v12,ul_2018_ZttHbb_v12 \
+ --cat cat_ZttHbb_elliptical_cut_90_sr --prd prod_240312_DNNinput --stat_prd prod_240305 --eos True
+```
+
+```bash
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZZbbtt_FullRun2_0 --run 0 --num 0
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZZbbtt_FullRun2_0 --run 0 --num 1
+
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_FullRun2_0 --run 0 --num 0
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_FullRun2_0 --run 0 --num 1
+ 
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZttHbb_FullRun2_0 --run 0 --num 0
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZttHbb_FullRun2_0 --run 0 --num 1
+```
+
+</details>
+
+For the Resonant (parametrized) training, choose `ResDNN`:
+```bash
+cd ResDNN
+```
+
+<details>
+<summary>2018 commands</summary>
+
+```bash
+python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZbbHtt_0 \
+ --sig Zprime_Zh_Zbbhtautau_M500_v3,Zprime_Zh_Zbbhtautau_M1000_v3,Zprime_Zh_Zbbhtautau_M2000_v3,Zprime_Zh_Zbbhtautau_M3000_v3,Zprime_Zh_Zbbhtautau_M4000_v3 \
+ --bkg all --json CrossSectionZbbHtt.json \
+ --base /data_CMS/cms/cuisset/cmt/ --ver ul_2018_ZbbHtt_v12 \
+ --cat cat_ZbbHtt_elliptical_cut_90_sr --prd prod_240312_DNNinput --stat_prd prod_240305 --eos True
+```
+
+</details>
 
 ## Inputs
 
@@ -32,11 +83,9 @@ The ntuples are converted to hdf5 files for the DNN training.
 python3 ProduceDNNInputs.py --out 2024_02_15/DNNWeight_ZZbbtt_0 --sig zz_sl_signal --bkg all --json CrossSectionZZ.json \
  --base /data_CMS/cms/vernazza/cmt/ --ver ul_2018_ZZ_v10 \
  --cat cat_ZZ_elliptical_cut_80_sr --prd prod_240207 --stat_prd prod_240128 --eos True
-
 python3 ProduceDNNInputs.py --out 2024_02_15/DNNWeight_ZbbHtt_0 --sig zh_zbb_htt_signal --bkg all --json CrossSectionZbbHtt.json \
  --base /data_CMS/cms/cuisset/cmt/ --ver ul_2018_ZbbHtt_v10 \
  --cat cat_ZbbHtt_elliptical_cut_90_sr --prd prod_240128 --stat_prd prod_240128 --eos True
- 
 python3 ProduceDNNInputs.py --out 2024_02_15/DNNWeight_ZttHbb_0 --sig zh_ztt_hbb_signal --bkg all --json CrossSectionZttHbb.json \
  --base /data_CMS/cms/cuisset/cmt/ --ver ul_2018_ZttHbb_v10 \
  --cat cat_ZttHbb_elliptical_cut_90_sr --prd prod_240128 --stat_prd prod_240128 --eos True
@@ -53,10 +102,8 @@ Two trainings have to performed for the even and odd event numbers: they can be 
 ```bash
 python3 TrainDNN.py --out 2024_02_15/DNNWeight_ZZbbtt_0 --run 0 --num 0
 python3 TrainDNN.py --out 2024_02_15/DNNWeight_ZZbbtt_0 --run 0 --num 1
-
 python3 TrainDNN.py --out 2024_02_15/DNNWeight_ZbbHtt_0 --run 0 --num 0
 python3 TrainDNN.py --out 2024_02_15/DNNWeight_ZbbHtt_0 --run 0 --num 1
- 
 python3 TrainDNN.py --out 2024_02_15/DNNWeight_ZttHbb_0 --run 0 --num 0
 python3 TrainDNN.py --out 2024_02_15/DNNWeight_ZttHbb_0 --run 0 --num 1
 ```
@@ -65,9 +112,7 @@ python3 TrainDNN.py --out 2024_02_15/DNNWeight_ZttHbb_0 --run 0 --num 1
 
 ```bash
 python3 TestDNN.py --out 2024_02_15/DNNWeight_ZZbbtt_0 --run 0 
-
 python3 TestDNN.py --out 2024_02_15/DNNWeight_ZbbHtt_0 --run 0
- 
 python3 TestDNN.py --out 2024_02_15/DNNWeight_ZttHbb_0 --run 0
 ```
 
@@ -100,8 +145,6 @@ Once the environment is set it is possible to save the model.
 
 ```bash
 python3 SaveDNN.py --out 2024_02_15/DNNWeight_ZZbbtt_0 --run 0 --name ZZbbtt
-
 python3 SaveDNN.py --out 2024_02_15/DNNWeight_ZbbHtt_0 --run 0 --name ZbbHtt
-
 python3 SaveDNN.py --out 2024_02_15/DNNWeight_ZttHbb_0 --run 0 --name ZttHbb
 ```
