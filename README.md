@@ -46,6 +46,18 @@ python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZttHbb_FullRun2_0 --run 0 --num 0
 python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZttHbb_FullRun2_0 --run 0 --num 1
 ```
 
+```bash
+python3 TestDNN.py --out 2024_03_26/DNNWeight_ZZbbtt_FullRun2_0 --run 0 
+python3 TestDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_FullRun2_0 --run 0
+python3 TestDNN.py --out 2024_03_26/DNNWeight_ZttHbb_FullRun2_0 --run 0
+```
+
+```bash
+python3 SaveDNN.py --out 2024_03_26/DNNWeight_ZZbbtt_FullRun2_0 --run 0 --name ZZbbtt --fold 2024-03-26
+python3 SaveDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_FullRun2_0 --run 0 --name ZbbHtt --fold 2024-03-26
+python3 SaveDNN.py --out 2024_03_26/DNNWeight_ZttHbb_FullRun2_0 --run 0 --name ZttHbb --fold 2024-03-26
+```
+
 </details>
 
 For the Resonant (parametrized) training, choose `ResDNN`:
@@ -62,6 +74,30 @@ python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZbbHtt_0 \
  --bkg all --json CrossSectionZbbHtt.json \
  --base /data_CMS/cms/cuisset/cmt/ --ver ul_2018_ZbbHtt_v12 \
  --cat cat_ZbbHtt_elliptical_cut_90_sr --prd prod_240312_DNNinput --stat_prd prod_240305 --eos True
+python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZttHbb_0 \
+ --sig Zprime_Zh_Ztautauhbb_M500_v3,Zprime_Zh_Ztautauhbb_M1000_v3,Zprime_Zh_Ztautauhbb_M2000_v3,Zprime_Zh_Ztautauhbb_M3000_v3,Zprime_Zh_Ztautauhbb_M4000_v3 \
+ --bkg all --json CrossSectionZttHbb.json \
+ --base /data_CMS/cms/cuisset/cmt/ --ver ul_2018_ZttHbb_v12 \
+ --cat cat_ZttHbb_elliptical_cut_90_sr --prd prod_240312_DNNinput --stat_prd prod_240305 --eos True
+```
+
+```bash
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_0 --run 0 --num 0
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_0 --run 0 --num 1
+
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZttHbb_0 --run 0 --num 0
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZttHbb_0 --run 0 --num 1
+```
+
+```bash
+python3 TestDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_0 --run 0 
+python3 TestDNN.py --out 2024_03_26/DNNWeight_ZttHbb_0 --run 0 
+```
+
+```bash
+conda activate lumin_3.7
+python3 SaveDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_0 --run 0 --name ResZbbHtt --fold 2024-03-26
+python3 SaveDNN.py --out 2024_03_26/DNNWeight_ZttHbb_0 --run 0 --name ResZttHbb --fold 2024-03-26
 ```
 
 </details>

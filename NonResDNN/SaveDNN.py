@@ -41,12 +41,13 @@ if __name__ == "__main__" :
     parser.add_option("--run",       dest="run",      default='0')
     parser.add_option("--name",      dest="name",     default='model')
     parser.add_option("--out",       dest="out",      default='DNNWeight_0')
+    parser.add_option("--fold",      dest="fold",     default=None)
     (options, args) = parser.parse_args()
 
     run_name = options.run
     ch_name = 'zz_bbtt'
 
-    basedir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/'+options.out+'/'
+    basedir = os.getcwd()+'/'+options.out+'/'
     weight_dir = basedir + 'ensemble/'
 
     print(" ### INFO: Import models")
@@ -72,7 +73,7 @@ if __name__ == "__main__" :
     write_ensemble_file(ensemble_1, ch_name, modeldir + '/ensemble_1/model_weights.txt')
 
     from lumin.nn.data.fold_yielder import FoldYielder
-    inpath = Path('/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/'+options.out+'/DNNInputs')
+    inpath = Path(os.getcwd()+'/'+options.out+'/DNNInputs')
 
     train_0_fy = FoldYielder(inpath/'train_0.hdf5', input_pipe=f'{inpath}/input_pipe_0.pkl')
     train_1_fy = FoldYielder(inpath/'train_1.hdf5', input_pipe=f'{inpath}/input_pipe_1.pkl')
@@ -88,6 +89,14 @@ if __name__ == "__main__" :
 
     bbtt = '/grid_mnt/data__data.polcms/cms/vernazza/FrameworkNanoAOD/hhbbtt-analysis/'
     outdir = bbtt + 'nanoaod_base_analysis/data/cmssw/CMSSW_12_3_0_pre6/src/cms_runII_dnn_models/models/arc_checks/zz_bbtt/'
-    os.system('cp -r ' + modeldir + ' ' + outdir)
+    if options.fold != None:
+        outdir = outdir + '/' + options.fold
+        os.system(f'mkdir -p {outdir}')
+    
+    print(f' ### INFO: From {modeldir}')
+    print(f' ### INFO: To {outdir}')
+    answer = input(" ### INFO: Do you want to copy the model? [y/n]")
+    if answer == 'y':
+        os.system('cp -r ' + modeldir + ' ' + outdir)
 
     print(" ### INFO: Done!")
