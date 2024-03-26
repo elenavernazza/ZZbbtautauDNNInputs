@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import os, sys, glob, json
+import os, sys, glob, json, pdb
 import h5py
 import pickle
 import uproot
@@ -24,9 +24,12 @@ from lumin.plotting.data_viewing import plot_feat
 
 def read_root_file(filename, tree_name, features):
     root_file = uproot.open(filename)
-    tree = root_file[tree_name]
-    if len(tree) != 0:
-        return tree.arrays(features, library="pd")
+    try:
+        tree = root_file[tree_name]
+        if len(tree) != 0:
+            return tree.arrays(features, library="pd")
+    except uproot.exceptions.KeyInFileError:
+        print(f"'{tree_name}' does not exist in the ROOT file: {filename}.")
 
 def check_weights(df:pd.DataFrame) -> None:
     v = []
@@ -72,6 +75,7 @@ features = in_feat + weights
 # no environment needed, only seteos
 
 '''
+# 2018 only
 python3 ProduceDNNInputs.py --out DNNWeight_ZZbbtt_0 --sig zz_sl_signal --bkg all --json CrossSectionZZ.json \
  --base /data_CMS/cms/vernazza/cmt/ --ver ul_2018_ZZ_v10 \
  --cat cat_ZZ_elliptical_cut_80_sr --prd prod_240207 --stat_prd prod_240128 --eos True
@@ -83,6 +87,20 @@ python3 ProduceDNNInputs.py --out DNNWeight_ZbbHtt_0 --sig zh_zbb_htt_signal --b
 python3 ProduceDNNInputs.py --out DNNWeight_ZttHbb_0 --sig zh_ztt_hbb_signal --bkg all --json CrossSectionZttHbb.json \
  --base /data_CMS/cms/cuisset/cmt/ --ver ul_2018_ZttHbb_v10 \
  --cat cat_ZttHbb_elliptical_cut_90 --prd prod_240128 --stat_prd prod_240128 --eos True
+
+# FullRun2
+python3 ProduceDNNInputs.py --out DNNWeight_ZZbbtt_FullRun2_0 --sig zz_sl_signal --bkg all --json CrossSectionZZ.json \
+ --base /data_CMS/cms/vernazza/cmt/ --ver ul_2016_ZZ_v12,ul_2016_HIPM_ZZ_v12,ul_2017_ZZ_v12,ul_2018_ZZ_v12 \
+ --cat cat_ZZ_elliptical_cut_90_sr --prd prod_240318 --stat_prd prod_240305 --eos True
+
+python3 ProduceDNNInputs.py --out DNNWeight_ZbbHtt_FullRun2_0 --sig zh_zbb_htt_signal --bkg all --json CrossSectionZbbHtt.json \
+ --base /data_CMS/cms/cuisset/cmt/ --ver ul_2016_ZbbHtt_v12,ul_2016_HIPM_ZbbHtt_v12,ul_2017_ZbbHtt_v12,ul_2018_ZbbHtt_v12 \
+ --cat cat_ZbbHtt_elliptical_cut_90_sr --prd prod_240312_DNNinput --stat_prd prod_240305 --eos True
+
+python3 ProduceDNNInputs.py --out DNNWeight_ZttHbb_FullRun2_0 --sig zh_ztt_hbb_signal --bkg all --json CrossSectionZttHbb.json \
+ --base /data_CMS/cms/cuisset/cmt/ --ver ul_2016_ZttHbb_v12,ul_2016_HIPM_ZttHbb_v12,ul_2017_ZttHbb_v12,ul_2018_ZttHbb_v12 \
+ --cat cat_ZttHbb_elliptical_cut_90_sr --prd prod_240312_DNNinput --stat_prd prod_240305 --eos True
+
 '''
 
 if __name__ == "__main__" :
@@ -94,10 +112,10 @@ if __name__ == "__main__" :
     parser.add_option("--bkg",       dest="bkg",      default='all')
     parser.add_option("--json",      dest="json",     default='CrossSection.json')
     parser.add_option("--base",      dest="base",     default='/data_CMS/cms/vernazza/cmt/')
-    parser.add_option("--ver",       dest="ver",      default='ul_2018_ZZ_v10')
-    parser.add_option("--cat",       dest="cat",      default='cat_ZZ_elliptical_cut_80_sr')
-    parser.add_option("--prd",       dest="prd",      default='prod_240207')
-    parser.add_option("--stat_prd",  dest="stat_prd", default='prod_240128')
+    parser.add_option("--ver",       dest="ver",      default='')
+    parser.add_option("--cat",       dest="cat",      default='')
+    parser.add_option("--prd",       dest="prd",      default='')
+    parser.add_option("--stat_prd",  dest="stat_prd", default='')
     parser.add_option("--eos",       dest="eos",      default=None)
     (options, args) = parser.parse_args()
 
@@ -108,91 +126,121 @@ if __name__ == "__main__" :
     with open(json_path, 'r') as json_file:
         xs_dict = json.load(json_file)
 
+    print("\n ### INFO: Reading signal")
     sig_name = options.sig
-    print(" ### INFO: Signal is", sig_name)
-    if not sig_name in xs_dict.keys(): sys.exit(" ### ERROR: Signal Sample not defined in json file. Exiting.\n")
+    if sig_name in xs_dict.keys():
+        print(" - " + sig_name)
+    else:
+        print(" *** ERROR *** \n", "Dataset not found: {}".format(sig_name))
+
+    print("\n ### INFO: Reading background")
+    bkg_names = []
     if options.bkg == 'all': 
-        bkg_names = [key for key in xs_dict.keys() if key != sig_name]
+        for bkg in xs_dict.keys():
+            if bkg == sig_name: continue
+            print(" - " + bkg)
+            bkg_names.append(bkg)
     else: 
-        bkg_names = [key for key in options.bkg.split(',') if key in xs_dict.keys()]
-    print(" ### INFO: Backgrounds are", bkg_names)
+        for bkg in options.bkg.split(','):
+            if bkg == sig_name: continue
+            if bkg in xs_dict.keys():
+                print(" - " + bkg)
+                bkg_names.append(bkg)
+            else:
+                print(" *** ERROR *** \n", "Dataset not found: {}".format(bkg))
 
     ######################### Define output ########################
 
-    odir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/'+options.out+'/DNNInputs'
+    odir = os.getcwd()+'/'+options.out+'/DNNInputs'
     if os.path.isdir(odir):
         print(" ### INFO: Output directory already existing")
-        # for i in range(0,10):
-        #     odir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/'+options.out+'.{}'.format(i)+'/DNNInputs'
-        #     if not os.path.isdir(odir):
-        #         break
     os.system('mkdir -p ' + odir)
     print(" ### INFO: Saving output in", odir)
 
     ######################### Read inputs #########################
 
-    # data_dir = '/data_CMS/cms/vernazza/cmt/Categorization/ul_2018_ZZ_v10/'
-    # stat_dir = '/data_CMS/cms/vernazza/cmt/MergeCategorizationStats/ul_2018_ZZ_v10/'
-    data_dir = options.base + '/Categorization/' + options.ver + '/'
-    stat_dir = options.base + '/MergeCategorizationStats/' + options.ver + '/'
+    if ',' in options.ver:
+        versions = options.ver.split(',')
+        if "ZZ" in options.ver:
+            o_name = 'ZZ_FullRun2'
+        elif "ZbbHtt" in options.ver:
+            o_name = 'ZbbHtt_FullRun2'
+        elif "ZttHbb" in options.ver:
+            o_name = 'ZttHbb_FullRun2'
+    else:
+        versions = [options.ver]
+        o_name = options.ver
 
-    files_sig = glob.glob(data_dir + sig_name + '/' + options.cat + '/' + options.prd + '/data_*.root')
-    print(f" ### INFO: Reading signal samples for {sig_name} :", data_dir + sig_name + '/' + options.cat + '/' + options.prd)
-    data_frames = [read_root_file(filename, 'Events', features) for filename in files_sig]
-    df_sig = pd.concat(data_frames, ignore_index=True)
-    stat_file_aux = stat_dir + sig_name + '_aux/' + options.stat_prd + '/stats.json'
-    stat_file = stat_dir + sig_name + '/' + options.stat_prd + '/stats.json'
-    if os.path.exists(stat_file_aux): stat_file = stat_file_aux
-    with open(stat_file, "r") as f: 
-        data = json.load(f)
-        nevents = data['nevents']
-        nweightedevents = data['nweightedevents']
-    df_sig['xs']         = xs_dict[sig_name]
-    df_sig['nev']        = nevents
-    df_sig['nev_w']      = nweightedevents
-    df_sig['gen_weight'] = df_sig['genWeight'] * df_sig['puWeight']
-    # df_sig['cor_weight'] = df_sig['prescaleWeight'] * df_sig['trigSF'] * df_sig['L1PreFiringWeight_Nom'] * df_sig['PUjetID_SF']
-    df_sig['cor_weight'] = df_sig['prescaleWeight'] * df_sig['trigSF'] * df_sig['PUjetID_SF']
-    df_sig['weight']     = xs_dict[sig_name]/nweightedevents * df_sig['gen_weight'] * df_sig['cor_weight']
-    df_sig['sample']     = sig_name
-    del data_frames
-
+    df_all_sig = pd.DataFrame()
     df_all_bkg = pd.DataFrame()
-    for bkg_name in bkg_names:
-        files_bkg = glob.glob(data_dir + bkg_name + '/' + options.cat + '/' + options.prd + '/data_*.root')
-        print(" ### INFO: Reading background samples for", bkg_name)
-        data_frames = [read_root_file(filename, 'Events', features) for filename in files_bkg]
-        df_bkg = pd.concat(data_frames, ignore_index=True)
-        if bkg_name != 'dy':
-            stat_file_aux = stat_dir + bkg_name + '_aux/' + options.stat_prd + '/stats.json'
-        else:
-            stat_dir + 'dy_nlo_aux/' + options.stat_prd + '/stats.json'
-        stat_file = stat_dir + bkg_name + '/' + options.stat_prd + '/stats.json'
+
+    for version in versions:
+
+        print('\n ***** INFO ***** : Reading version {}'.format(version))
+
+        data_dir = options.base + '/Categorization/' + version + '/'
+        stat_dir = options.base + '/MergeCategorizationStats/' + version + '/'
+        print(' ### INFO: Reading datasets in {}'.format(data_dir))
+        print(' ### INFO: Reading normalization in {}'.format(stat_dir))
+
+        files_sig = glob.glob(data_dir + sig_name + '/' + options.cat + '/' + options.prd + '/data_*.root')
+        print(f" ### INFO: Reading signal samples for {sig_name} :", data_dir + sig_name + '/' + options.cat + '/' + options.prd)
+        data_frames = [read_root_file(filename, 'Events', features) for filename in files_sig]
+        df_sig = pd.concat(data_frames, ignore_index=True)
+        stat_file_aux = stat_dir + sig_name + '_aux/' + options.stat_prd + '/stats.json'
+        stat_file = stat_dir + sig_name + '/' + options.stat_prd + '/stats.json'
         if os.path.exists(stat_file_aux): stat_file = stat_file_aux
         with open(stat_file, "r") as f: 
             data = json.load(f)
             nevents = data['nevents']
             nweightedevents = data['nweightedevents']
-        df_bkg['xs']         = xs_dict[bkg_name]
-        df_bkg['nev']        = nevents
-        df_bkg['nev_w']      = nweightedevents
-        df_bkg['gen_weight'] = df_bkg['genWeight'] * df_bkg['puWeight']
-        # df_bkg['cor_weight'] = df_bkg['prescaleWeight'] * df_bkg['trigSF'] * df_bkg['L1PreFiringWeight_Nom'] * df_bkg['PUjetID_SF']
-        df_bkg['cor_weight'] = df_bkg['prescaleWeight'] * df_bkg['trigSF'] * df_bkg['PUjetID_SF']
-        df_bkg['weight']     = xs_dict[bkg_name]/nweightedevents * df_bkg['gen_weight'] * df_bkg['cor_weight']
-        df_bkg['sample']     = bkg_name
-        print(" ### INFO: Appending")
-        df_all_bkg = pd.concat([df_all_bkg, df_bkg], ignore_index=True)
+        df_sig['xs']         = xs_dict[sig_name]
+        df_sig['nev']        = nevents
+        df_sig['nev_w']      = nweightedevents
+        df_sig['gen_weight'] = df_sig['genWeight'] * df_sig['puWeight']
+        df_sig['cor_weight'] = df_sig['prescaleWeight'] * df_sig['trigSF'] * df_sig['PUjetID_SF'] # * df_sig['DYstitchEasyWeight']
+        df_sig['weight']     = xs_dict[sig_name]/nweightedevents * df_sig['gen_weight'] * df_sig['cor_weight']
+        df_sig['sample']     = sig_name
+        df_all_sig = pd.concat([df_all_sig, df_sig], ignore_index=True)
         del data_frames
 
-    df_sig.insert(0, 'Class', 1, True)
+        for bkg_name in bkg_names:
+            files_bkg = glob.glob(data_dir + bkg_name + '/' + options.cat + '/' + options.prd + '/data_*.root')
+            print(f" ### INFO: Reading background sample :", data_dir + bkg_name + '/' + options.cat + '/' + options.prd)
+            data_frames = [read_root_file(filename, 'Events', features) for filename in files_bkg]
+            try:
+                df_bkg = pd.concat(data_frames, ignore_index=True)
+            except:
+                print(" ### ERROR: Empty dataset")
+                continue
+            if bkg_name != 'dy':
+                stat_file_aux = stat_dir + bkg_name + '_aux/' + options.stat_prd + '/stats.json'
+            else:
+                stat_dir + 'dy_nlo_aux/' + options.stat_prd + '/stats.json'
+            stat_file = stat_dir + bkg_name + '/' + options.stat_prd + '/stats.json'
+            if os.path.exists(stat_file_aux): stat_file = stat_file_aux
+            with open(stat_file, "r") as f: 
+                data = json.load(f)
+                nevents = data['nevents']
+                nweightedevents = data['nweightedevents']
+            df_bkg['xs']         = xs_dict[bkg_name]
+            df_bkg['nev']        = nevents
+            df_bkg['nev_w']      = nweightedevents
+            df_bkg['gen_weight'] = df_bkg['genWeight'] * df_bkg['puWeight']
+            df_bkg['cor_weight'] = df_bkg['prescaleWeight'] * df_bkg['trigSF'] * df_bkg['PUjetID_SF'] # * df_bkg['DYstitchEasyWeight']
+            df_bkg['weight']     = xs_dict[bkg_name]/nweightedevents * df_bkg['gen_weight'] * df_bkg['cor_weight']
+            df_bkg['sample']     = bkg_name
+            df_all_bkg = pd.concat([df_all_bkg, df_bkg], ignore_index=True)
+            del data_frames
+
+    df_all_sig.insert(0, 'Class', 1, True)
     df_all_bkg.insert(0, 'Class', 0, True)
 
-    Events = pd.concat([df_sig, df_all_bkg])
+    Events = pd.concat([df_all_sig, df_all_bkg])
 
     ######################### Print statistics #########################
 
-    print(' ### INFO: Signal size = \t',len(df_sig))
+    print(' ### INFO: Signal size = \t',len(df_all_sig))
     print(' ### INFO: Background size = \t', len(df_all_bkg))
 
     ss = sorted(Events['sample'].unique())
@@ -285,16 +333,16 @@ if __name__ == "__main__" :
     b = PlotSettings(w_mid=10, b_mid=10, cat_palette='Set1', style={}, format='png')
 
     if options.eos != None:
-        print(" ### INFO: Plots saved to https://evernazz.web.cern.ch/evernazz/ZZbbtautau/DNNFeaturePlots/" + options.ver)
-        wwwdir = '/eos/home-e/evernazz/www/ZZbbtautau/DNNFeaturePlots/' + options.ver + '/Inputs0'
+        print(" ### INFO: Plots saved to https://evernazz.web.cern.ch/evernazz/ZZbbtautau/DNNFeaturePlots/" + o_name)
+        wwwdir = '/eos/home-e/evernazz/www/ZZbbtautau/DNNFeaturePlots/' + o_name + '/Inputs0'
         os.system('mkdir -p ' + wwwdir)
-        os.system('cp /eos/home-e/evernazz/www/index.php /eos/home-e/evernazz/www/ZZbbtautau/DNNFeaturePlots/' + options.ver)
+        os.system('cp /eos/home-e/evernazz/www/index.php /eos/home-e/evernazz/www/ZZbbtautau/DNNFeaturePlots/' + o_name)
         os.system('cp /eos/home-e/evernazz/www/index.php ' + wwwdir)
         for feature in cont_feat:
             save_name = wwwdir + '/TrainFeat_' + feature
             plot_feat(set_0_train_weight, feature, cuts=[(set_0_train_weight.Class==1),(set_0_train_weight.Class==0)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=a)
             plot_feat(set_0_train_weight, feature, cuts=[(set_0_train_weight.Class==1),(set_0_train_weight.Class==0)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=b)
-        wwwdir = '/eos/home-e/evernazz/www/ZZbbtautau/DNNFeaturePlots/' + options.ver + '/Inputs1'
+        wwwdir = '/eos/home-e/evernazz/www/ZZbbtautau/DNNFeaturePlots/' + o_name + '/Inputs1'
         os.system('mkdir -p ' + wwwdir)
         os.system('cp /eos/home-e/evernazz/www/index.php ' + wwwdir)
         for feature in cont_feat:

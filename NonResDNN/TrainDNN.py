@@ -14,12 +14,17 @@ import torch
 '''
 python3 TrainDNN.py --out DNNWeight_ZZbbtt_0 --run 0 --num 0
 python3 TrainDNN.py --out DNNWeight_ZZbbtt_0 --run 0 --num 1
-
 python3 TrainDNN.py --out DNNWeight_ZbbHtt_0 --run 0 --num 0
 python3 TrainDNN.py --out DNNWeight_ZbbHtt_0 --run 0 --num 1
- 
 python3 TrainDNN.py --out DNNWeight_ZttHbb_0 --run 0 --num 0
 python3 TrainDNN.py --out DNNWeight_ZttHbb_0 --run 0 --num 1
+
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZZbbtt_FullRun2_0 --run 0 --num 0
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZZbbtt_FullRun2_0 --run 0 --num 1
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_FullRun2_0 --run 0 --num 0
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_FullRun2_0 --run 0 --num 1
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZttHbb_FullRun2_0 --run 0 --num 0
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZttHbb_FullRun2_0 --run 0 --num 1
 '''
 
 if __name__ == "__main__" :
@@ -39,12 +44,12 @@ if __name__ == "__main__" :
     torch.cuda.get_device_name()
     torch.cuda.empty_cache()
 
-    indir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/'+options.out+'/DNNInputs'
+    indir = os.getcwd()+'/'+options.out+'/DNNInputs'
     print(" ### INFO: Reading data from {}".format(indir))
     inpath = Path(indir)
     train_fy = FoldYielder(inpath/f'train_{num}.hdf5', input_pipe=inpath/f'input_pipe_{num}.pkl')
 
-    basedir = '/data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/'+options.out+'/'
+    basedir = os.getcwd()+'/'+options.out+'/'
     os.system("mkdir -p " + basedir)
     outdir = basedir + f'train_weights_{num}'
     os.system("mkdir -p " + outdir)
@@ -107,4 +112,4 @@ if __name__ == "__main__" :
     ensemble[0][1].head.plot_embeds()
 
     # remove automatically created useless folder
-    os.system('rm -r /data_CMS/cms/vernazza/FrameworkNanoAOD/DNNTraining/train_weights')
+    os.system('rm -r '+os.getcwd()+'/'+'/train_weights')
