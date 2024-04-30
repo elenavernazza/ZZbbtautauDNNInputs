@@ -197,6 +197,9 @@ if __name__ == "__main__" :
             else: mass = float(sig_name.split("M")[-1])
             print(f" ### INFO: Reading signal samples for mass {mass} GeV :", data_dir + sig_name + '/' + options.cat + '/' + options.prd)
             data_frames = [read_root_file(filename, 'Events', features) for filename in files_sig]
+            if all(element is None for element in data_frames): 
+                print(" ### EMPTY DATASET")
+                continue
             df_sig = pd.concat(data_frames, ignore_index=True)
             stat_file_aux = stat_dir + sig_name + '_aux/' + options.stat_prd + '/stats.json'
             stat_file = stat_dir + sig_name + '/' + options.stat_prd + '/stats.json'
@@ -434,7 +437,7 @@ if __name__ == "__main__" :
         if '_v3' in sig_name:
             output_name = "M" + sig_name.split("_M")[1].split("_v3")[0]
         else:
-            output_name = sig_name.split("_")[1]
+            output_name = "M" + sig_name.split("_M")[1]
         df2foldfile(df=set_0_test_vector[i], n_folds=10,
                 cont_feats=cont_feat, cat_feats=cat_feat, targ_feats='Class', wgt_feat='weight',
                 savename=savepath/f'test_{output_name}_0', targ_type='int')

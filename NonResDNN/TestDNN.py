@@ -64,17 +64,13 @@ if __name__ == "__main__" :
     odir = basedir + '/TestingPerformance/'
     os.system('mkdir -p ' + odir)
 
-    plot_binary_class_pred(df, savename=odir+"Overall")
-
-    print('\nMu Tau')
-    plot_binary_class_pred(df[df.channel==1], density=True, savename=odir+"muTau")
-    # plot_binary_class_pred(df[df.pairType==0], density=True, savename=odir+"muTau")
-    print('E Tau')
-    plot_binary_class_pred(df[df.channel==2], density=True, savename=odir+"eTau")
-    # plot_binary_class_pred(df[df.pairType==1], density=True, savename=odir+"eTau")
-    print('Tau Tau')
-    plot_binary_class_pred(df[df.channel==0], density=True, savename=odir+"tauTau")
-    # plot_binary_class_pred(df[df.pairType==2], density=True, savename=odir+"tauTau")
+    # plot_binary_class_pred(df, savename=odir+"Overall")
+    # print('\nMu Tau')
+    # plot_binary_class_pred(df[df.channel==1], density=True, savename=odir+"muTau")
+    # print('E Tau')
+    # plot_binary_class_pred(df[df.channel==2], density=True, savename=odir+"eTau")
+    # print('Tau Tau')
+    # plot_binary_class_pred(df[df.channel==0], density=True, savename=odir+"tauTau")
 
     print(" ### INFO: Producing fancy plots")
 

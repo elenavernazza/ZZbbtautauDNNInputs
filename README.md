@@ -21,7 +21,7 @@ cd NonResDNN
 ```
 
 <details>
-<summary>FullRun2 commands</summary>
+<summary>FullRun2 NonResDNN commands</summary>
 
 ```bash
 python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZZbbtt_FullRun2_0 --sig zz_sl_signal --bkg all --json CrossSectionZZ.json \
@@ -66,9 +66,74 @@ cd ResDNN
 ```
 
 <details>
+<summary>FullRun2 NonResDNN commands</summary>
+
+```bash
+python3 ProduceDNNInputs.py --out 2024_04_29/DNNWeight_ZZbbtt_0 \
+ --sig GluGluToXToZZTo2B2Tau_M200,GluGluToXToZZTo2B2Tau_M210,GluGluToXToZZTo2B2Tau_M220,GluGluToXToZZTo2B2Tau_M230,GluGluToXToZZTo2B2Tau_M240,GluGluToXToZZTo2B2Tau_M250,\
+GluGluToXToZZTo2B2Tau_M260,GluGluToXToZZTo2B2Tau_M270,GluGluToXToZZTo2B2Tau_M280,GluGluToXToZZTo2B2Tau_M300,GluGluToXToZZTo2B2Tau_M320,GluGluToXToZZTo2B2Tau_M350,GluGluToXToZZTo2B2Tau_M360,\
+GluGluToXToZZTo2B2Tau_M400,GluGluToXToZZTo2B2Tau_M450,GluGluToXToZZTo2B2Tau_M500,GluGluToXToZZTo2B2Tau_M550,GluGluToXToZZTo2B2Tau_M600,GluGluToXToZZTo2B2Tau_M650,GluGluToXToZZTo2B2Tau_M700,\
+GluGluToXToZZTo2B2Tau_M750,GluGluToXToZZTo2B2Tau_M800,GluGluToXToZZTo2B2Tau_M850,GluGluToXToZZTo2B2Tau_M900,GluGluToXToZZTo2B2Tau_M1000,GluGluToXToZZTo2B2Tau_M1100,GluGluToXToZZTo2B2Tau_M1200,\
+GluGluToXToZZTo2B2Tau_M1300,GluGluToXToZZTo2B2Tau_M1400,GluGluToXToZZTo2B2Tau_M1500,GluGluToXToZZTo2B2Tau_M1600,GluGluToXToZZTo2B2Tau_M1700,GluGluToXToZZTo2B2Tau_M1800,GluGluToXToZZTo2B2Tau_M1900,\
+GluGluToXToZZTo2B2Tau_M2000,GluGluToXToZZTo2B2Tau_M2200,GluGluToXToZZTo2B2Tau_M2400,GluGluToXToZZTo2B2Tau_M2500,GluGluToXToZZTo2B2Tau_M2600,GluGluToXToZZTo2B2Tau_M2800,GluGluToXToZZTo2B2Tau_M3000,\
+GluGluToXToZZTo2B2Tau_M3500,GluGluToXToZZTo2B2Tau_M4000,GluGluToXToZZTo2B2Tau_M4500,GluGluToXToZZTo2B2Tau_M5000 \
+ --bkg all --json CrossSectionZZ.json \
+ --base /data_CMS/cms/vernazza/cmt/ --ver ul_2016_ZZ_v12,ul_2016_HIPM_ZZ_v12,ul_2017_ZZ_v12,ul_2018_ZZ_v12 \
+ --cat cat_ZZ_elliptical_cut_90_sr --prd prod_240318 --stat_prd prod_240305 --eos True
+
+python3 ProduceDNNInputs.py --out 2024_04_29/DNNWeight_ZbbHtt_0 \
+ --sig ZprimeToZH_ZToBB_HToTauTau_M600,ZprimeToZH_ZToBB_HToTauTau_M800,ZprimeToZH_ZToBB_HToTauTau_M1000,ZprimeToZH_ZToBB_HToTauTau_M1200,ZprimeToZH_ZToBB_HToTauTau_M1400,\
+ZprimeToZH_ZToBB_HToTauTau_M1600,ZprimeToZH_ZToBB_HToTauTau_M1800,ZprimeToZH_ZToBB_HToTauTau_M2000,ZprimeToZH_ZToBB_HToTauTau_M2500,ZprimeToZH_ZToBB_HToTauTau_M3000,\
+ZprimeToZH_ZToBB_HToTauTau_M3500,ZprimeToZH_ZToBB_HToTauTau_M4000 \
+ --bkg all --json CrossSectionZbbHtt.json \
+ --base /data_CMS/cms/cuisset/cmt/ --ver ul_2016_ZbbHtt_v12,ul_2016_HIPM_ZbbHtt_v12,ul_2017_ZbbHtt_v12,ul_2018_ZbbHtt_v12 \
+ --cat cat_ZbbHtt_elliptical_cut_90_sr --prd prod_240312_DNNinput --stat_prd prod_240305 --eos True
+
+python3 ProduceDNNInputs.py --out 2024_04_29/DNNWeight_ZttHbb_0 \
+ --sig ZprimeToZH_ZToTauTau_HToBB_M600,ZprimeToZH_ZToTauTau_HToBB_M800,ZprimeToZH_ZToTauTau_HToBB_M1000,ZprimeToZH_ZToTauTau_HToBB_M1200,ZprimeToZH_ZToTauTau_HToBB_M1400,\
+ZprimeToZH_ZToTauTau_HToBB_M1600,ZprimeToZH_ZToTauTau_HToBB_M1800,ZprimeToZH_ZToTauTau_HToBB_M2000,ZprimeToZH_ZToTauTau_HToBB_M2500,ZprimeToZH_ZToTauTau_HToBB_M3000,\
+ZprimeToZH_ZToTauTau_HToBB_M3500,ZprimeToZH_ZToTauTau_HToBB_M4000 \
+ --bkg all --json CrossSectionZttHbb.json \
+ --base /data_CMS/cms/cuisset/cmt/ --ver ul_2016_ZttHbb_v12,ul_2016_HIPM_ZttHbb_v12,ul_2017_ZttHbb_v12,ul_2018_ZttHbb_v12 \
+ --cat cat_ZttHbb_elliptical_cut_90_sr --prd prod_240312_DNNinput --stat_prd prod_240305 --eos True
+```
+
+```bash
+python3 TrainDNN.py --out 2024_04_29/DNNWeight_ZZbbtt_0 --run 0 --num 0
+python3 TrainDNN.py --out 2024_04_29/DNNWeight_ZZbbtt_0 --run 0 --num 1
+
+python3 TrainDNN.py --out 2024_04_29/DNNWeight_ZbbHtt_0 --run 0 --num 0
+python3 TrainDNN.py --out 2024_04_29/DNNWeight_ZbbHtt_0 --run 0 --num 1
+
+python3 TrainDNN.py --out 2024_04_29/DNNWeight_ZttHbb_0 --run 0 --num 0
+python3 TrainDNN.py --out 2024_04_29/DNNWeight_ZttHbb_0 --run 0 --num 1
+```
+
+```bash
+python3 TestDNN.py --out 2024_04_29/DNNWeight_ZZbbtt_0 --run 0
+python3 TestDNN.py --out 2024_04_29/DNNWeight_ZbbHtt_0 --run 0 
+python3 TestDNN.py --out 2024_04_29/DNNWeight_ZttHbb_0 --run 0 
+```
+
+```bash
+conda activate lumin_3.7
+python3 SaveDNN.py --out 2024_04_29/DNNWeight_ZZbbtt_0 --run 0 --name ResZZbbtt --fold 2024-04-29
+python3 SaveDNN.py --out 2024_04_29/DNNWeight_ZbbHtt_0 --run 0 --name ResZbbHtt --fold 2024-04-29
+python3 SaveDNN.py --out 2024_04_29/DNNWeight_ZttHbb_0 --run 0 --name ResZttHbb --fold 2024-04-29
+```
+
+</details>
+
+<details>
 <summary>2018 commands</summary>
 
 ```bash
+python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZZbbtt_0 \
+ --sig ggXZZbbtt_M200,ggXZZbbtt_M300,ggXZZbbtt_M400,ggXZZbbtt_M500,ggXZZbbtt_M600,ggXZZbbtt_M700,ggXZZbbtt_M800,ggXZZbbtt_M900,\
+ggXZZbbtt_M1000,ggXZZbbtt_M1100,ggXZZbbtt_M1200,ggXZZbbtt_M1300,ggXZZbbtt_M1400,ggXZZbbtt_M1500,ggXZZbbtt_M2000,ggXZZbbtt_M3000 \
+ --bkg all --json CrossSectionZZ.json \
+ --base /data_CMS/cms/vernazza/cmt/ --ver ul_2018_ZZ_v12 \
+ --cat cat_ZZ_elliptical_cut_90_sr --prd prod_240318 --stat_prd prod_240305 --eos True
 python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZbbHtt_0 \
  --sig Zprime_Zh_Zbbhtautau_M500_v3,Zprime_Zh_Zbbhtautau_M1000_v3,Zprime_Zh_Zbbhtautau_M2000_v3,Zprime_Zh_Zbbhtautau_M3000_v3,Zprime_Zh_Zbbhtautau_M4000_v3 \
  --bkg all --json CrossSectionZbbHtt.json \
@@ -82,6 +147,9 @@ python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZttHbb_0 \
 ```
 
 ```bash
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZZbbtt_0 --run 0 --num 0
+python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZZbbtt_0 --run 0 --num 1
+
 python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_0 --run 0 --num 0
 python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_0 --run 0 --num 1
 
@@ -90,12 +158,14 @@ python3 TrainDNN.py --out 2024_03_26/DNNWeight_ZttHbb_0 --run 0 --num 1
 ```
 
 ```bash
+python3 TestDNN.py --out 2024_03_26/DNNWeight_ZZbbtt_0 --run 0
 python3 TestDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_0 --run 0 
 python3 TestDNN.py --out 2024_03_26/DNNWeight_ZttHbb_0 --run 0 
 ```
 
 ```bash
 conda activate lumin_3.7
+python3 SaveDNN.py --out 2024_03_26/DNNWeight_ZZbbtt_0 --run 0 --name ResZZbbtt --fold 2024-03-26
 python3 SaveDNN.py --out 2024_03_26/DNNWeight_ZbbHtt_0 --run 0 --name ResZbbHtt --fold 2024-03-26
 python3 SaveDNN.py --out 2024_03_26/DNNWeight_ZttHbb_0 --run 0 --name ResZttHbb --fold 2024-03-26
 ```
