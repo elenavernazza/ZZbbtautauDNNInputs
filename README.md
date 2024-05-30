@@ -66,7 +66,7 @@ cd ResDNN
 ```
 
 <details>
-<summary>FullRun2 NonResDNN commands</summary>
+<summary>FullRun2 ResDNN commands</summary>
 
 ```bash
 python3 ProduceDNNInputs.py --out 2024_04_29/DNNWeight_ZZbbtt_0 \

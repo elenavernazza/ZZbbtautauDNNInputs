@@ -3,7 +3,7 @@ sys.path.append('../')
 from cms_runII_dnn_resonant.modules.data_import import *
 from cms_runII_dnn_resonant.modules.basics import *
 
-import torch
+import torch, pdb, json
 
 #######################################################################
 ######################### SCRIPT BODY #################################
@@ -96,8 +96,13 @@ if __name__ == "__main__" :
     name = weightdir + f'selected_set_{num}_{run_name}'
     ensemble.save(name, feats=train_fy.cont_feats + train_fy.cat_feats, overwrite=True)
 
+    with open(outdir + '/Loss_History.json', 'w') as f: 
+        f.write(json.dumps(histories, indent=4))
+
     savename = outdir + '/Feat_Importance'
-    _ = ensemble.get_feat_importance(train_fy, savename=savename)
+    feat_res = ensemble.get_feat_importance(train_fy, savename=savename)
+    feat_res.to_csv(outdir + '/Feat_Importance.csv')
+
     ensemble[0][1].head.plot_embeds()
 
     # remove automatically created useless folder

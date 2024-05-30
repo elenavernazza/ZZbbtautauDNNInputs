@@ -13,6 +13,9 @@ import math
 from sklearn.metrics import roc_auc_score
 import numpy as np
 
+import mplhep
+plt.style.use(mplhep.style.CMS)
+
 def load_full_df(fy:FoldYielder) -> pd.DataFrame:
     df = fy.get_df(inc_inputs=True, verbose=False)
     # df['gen_sample']    = fy.get_column('gen_sample')
@@ -41,8 +44,80 @@ if __name__ == "__main__" :
     (options, args) = parser.parse_args()
 
     run_name = options.run
-
     basedir = os.getcwd()+'/'+options.out+'/'
+    odir = basedir + '/TestingPerformance/'
+    os.system('mkdir -p ' + odir)
+
+    ################################################
+    print(" ### INFO: Plotting Feature Importance")
+    ################################################
+
+    if "ZZ" in options.out:
+        pp = 'ZZ'; p_tt = 'Z'; p_bb = 'Z'; fancy_name = '$ZZ_{bb\\tau\\tau}$'; o_name = 'ZZbbtt'
+    elif "ZbbHtt" in options.out:
+        pp = 'ZH'; p_tt = 'H'; p_bb = 'Z'; fancy_name = '$Z_{bb}H_{\\tau\\tau}$'; o_name = 'ZbbHtt'
+    elif "ZttHbb" in options.out:
+        pp = 'ZH'; p_tt = 'Z'; p_bb = 'H'; fancy_name = '$Z_{\\tau\\tau}H_{bb}$'; o_name = 'ZttHbb'
+    
+    cont_feat = ['hh_kinfit_chi2', 'hh_kinfit_m', 'sv_mass', 'dR_l1_l2_x_sv_pT', 'l_1_mt', 'l_2_pT', 'dR_l1_l2',
+                'dphi_sv_met', 'h_bb_mass', 'b_2_hhbtag', 'diH_mass_sv', 'dphi_hbb_sv', 'h_bb_pT', 
+                'dR_l1_l2_boosted_htt_met', 'l_1_pT', 'b_1_pT', 'phi', 'costheta_l2_httmet', 'b_1_cvsb', 'b_1_cvsl',
+                'boosted', 'channel', 'is_vbf', 'jet_1_quality', 'jet_2_quality', 'year', 'mass']
+    
+    cont_feat_name = [  fr'$\chi^{2}$(KinFit)', fr'$M_{{{pp}}}$(KinFit)', fr'$M_{{{p_tt}}}$(SVFit)', fr'$\Delta R (l_{1},l_{2}) \times p_T$(SVFit)', 
+                        fr'$m_T (l_{1})$', fr'$p_T (l_{2})$',  fr'$\Delta R (l_{1},l_{2})$', fr'$\Delta\phi (MET, {{{p_tt}}}$(SVFit)$)$',
+                        fr'$M ({{{p_bb}}}_{{bb}})$', fr'HHbtag$(b_{2})$', fr'$M_{{{pp}}}$(SVFit)', fr'$\Delta\phi ({{{p_bb}}}_{{bb}}, {{{p_tt}}}$(SVFit)$)$', 
+                        fr'$p_T ({{{p_bb}}}_{{bb}})$', fr'$\Delta R (l_{1},l_{2}) \times (MET+{{{p_tt}}}_{{\tau\tau}})$',
+                        fr'$p_T (l_{1})$', fr'$p_T (b_{1})$', fr'$\Phi$', fr'$\cos \Theta \,(l_{2}, (MET+{{{p_tt}}}_{{\tau\tau}}))$', fr'CvsB $(b_{1})$', fr'CvsL $(b_{1})$',
+                        'Boosted', 'Channel', 'VBF', fr'quality $(jet_{1})$', fr'quality $(jet_{2})$', 'Year', 'Mass']
+    
+    feature_name_dict = dict(zip(cont_feat, cont_feat_name))
+
+    for num in [0, 1]:
+        feat_res_csv = basedir + f'train_weights_{num}/Feat_Importance.csv'
+        df = pd.read_csv(feat_res_csv)
+        df = df.sort_values(by='Importance', ascending=False)
+        df['Feature_Name'] = df['Feature'].map(feature_name_dict)
+
+        plt.figure(figsize=(15, 12))
+        bars = plt.barh(df['Feature_Name'], df['Importance'], xerr=df['Uncertainty'], align='center', alpha=0.7, ecolor='black', capsize=5)
+        plt.xlabel('Importance')
+        plt.title(f'Importance via Feature Permutation ({fancy_name})')
+        plt.gca().invert_yaxis()
+        plt.subplots_adjust(left=0.22, right=0.95, top=0.9, bottom=0.1)
+        plt.savefig(odir + f'/FeatureImportance_{num}.png')
+        plt.savefig(odir + f'/FeatureImportance_{num}.pdf')
+        plt.xscale('log')
+        plt.savefig(odir + f'/FeatureImportance_{num}_log.png')
+        plt.savefig(odir + f'/FeatureImportance_{num}_log.pdf')
+
+    ################################################
+    print(" ### INFO: Plotting Training History")
+    ################################################
+
+    for num in [0, 1]:
+        loss_json = basedir + f'train_weights_{num}/Loss_History.json'
+        with open(loss_json, 'r') as file:
+            df = json.load(file)
+        
+        plt.figure(figsize=(12, 12))
+        cmap = plt.get_cmap('tab20')
+        for i in range(0,len(df)):
+            plt.plot(np.arange(0,len(df[i][0]['Training'])), df[i][0]['Training'], '.', linestyle='--', color=cmap(2*i+1))
+        for i in range(0,len(df)):
+            plt.plot(9*np.arange(1,len(df[i][0]['Validation'])+1), df[i][0]['Validation'], 'o', linestyle='-', color=cmap(2*i), label=f"Model {i}")
+        plt.xlabel('Sub-Epoch')
+        plt.ylabel('Loss')
+        plt.legend(loc='upper right')
+        plt.grid()
+        plt.title(f'Loss History ({fancy_name})')
+        plt.savefig(odir + f'/TrainingHistory_{num}.png')
+        plt.savefig(odir + f'/TrainingHistory_{num}.pdf')
+
+    ################################################
+    print(" ### INFO: Plotting Performance")
+    ################################################
+
     weight_dir = basedir + 'ensemble/'
 
     ensemble_0 = Ensemble.from_save(weight_dir + f'selected_set_0_{run_name}')
@@ -59,22 +134,6 @@ if __name__ == "__main__" :
 
     df = load_full_df(fy=set_0_fy).append(load_full_df(fy=set_1_fy))
 
-    odir = basedir + '/TestingPerformance/'
-    os.system('mkdir -p ' + odir)
-
-    # plot_binary_class_pred(df, savename=odir+"Overall")
-    # print('\nMu Tau')
-    # plot_binary_class_pred(df[df.channel==1], density=True, savename=odir+"muTau")
-    # print('E Tau')
-    # plot_binary_class_pred(df[df.channel==2], density=True, savename=odir+"eTau")
-    # print('Tau Tau')
-    # plot_binary_class_pred(df[df.channel==0], density=True, savename=odir+"tauTau")
-
-    print(" ### INFO: Producing fancy plots")
-
-    import mplhep
-    plt.style.use(mplhep.style.CMS)
-
     def SetStyle(ax, x_label, y_label, x_lim = None, y_lim = None, leg_title='', leg_loc='upper right'):
         leg = plt.legend(loc=leg_loc, fontsize=20, title=leg_title, title_fontsize=18)
         leg._legend_box.align = "left"
@@ -85,7 +144,7 @@ if __name__ == "__main__" :
         plt.grid()
         for xtick in ax.xaxis.get_major_ticks():
             xtick.set_pad(10)
-        mplhep.cms.label(data=False, rlabel='(13 TeV)', fontsize=20)
+        mplhep.cms.label(data=False, rlabel='137.1 $fb^{-1}$ (13 TeV)', fontsize=20)
     
     binning = np.linspace(0,1,101)
     bin_c = np.array((binning[:-1] + binning[1:]) / 2)
@@ -100,7 +159,7 @@ if __name__ == "__main__" :
     fig, ax = plt.subplots(figsize=(10,10))
     ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
     ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_loc='upper center')
+    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
     plt.savefig(odir + '/DNNScore.png')
     plt.savefig(odir + '/DNNScore.pdf')
     plt.close()
@@ -111,7 +170,7 @@ if __name__ == "__main__" :
     h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
     i_h_DNNscore_sig = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
     i_h_DNNscore_bkg = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-    r_h_DNNscore_bkg = 1 - i_h_DNNscore_bkg
+    # r_h_DNNscore_bkg = 1 - i_h_DNNscore_bkg
 
     #################################################
     # Etau
@@ -124,7 +183,7 @@ if __name__ == "__main__" :
     fig, ax = plt.subplots(figsize=(10,10))
     ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
     ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_loc='upper center')
+    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
     plt.savefig(odir + '/DNNScore_eTau.png')
     plt.savefig(odir + '/DNNScore_eTau.pdf')
     plt.close()
@@ -135,7 +194,7 @@ if __name__ == "__main__" :
     h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
     i_h_DNNscore_sig_etau = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
     i_h_DNNscore_bkg_etau = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-    r_h_DNNscore_bkg_etau = 1 - i_h_DNNscore_bkg_etau
+    # r_h_DNNscore_bkg_etau = 1 - i_h_DNNscore_bkg_etau
 
     #################################################
     # Mutau
@@ -148,7 +207,7 @@ if __name__ == "__main__" :
     fig, ax = plt.subplots(figsize=(10,10))
     ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
     ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_loc='upper center')
+    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
     plt.savefig(odir + '/DNNScore_muTau.png')
     plt.savefig(odir + '/DNNScore_muTau.pdf')
     plt.close()
@@ -159,7 +218,7 @@ if __name__ == "__main__" :
     h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
     i_h_DNNscore_sig_mutau = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
     i_h_DNNscore_bkg_mutau = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-    r_h_DNNscore_bkg_mutau = 1 - i_h_DNNscore_bkg_mutau
+    # r_h_DNNscore_bkg_mutau = 1 - i_h_DNNscore_bkg_mutau
 
     #################################################
     # Tautau
@@ -172,7 +231,7 @@ if __name__ == "__main__" :
     fig, ax = plt.subplots(figsize=(10,10))
     ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
     ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_loc='upper center')
+    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
     plt.savefig(odir + '/DNNScore_tauTau.png')
     plt.savefig(odir + '/DNNScore_tauTau.pdf')
     plt.close()
@@ -183,17 +242,20 @@ if __name__ == "__main__" :
     h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
     i_h_DNNscore_sig_tautau = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
     i_h_DNNscore_bkg_tautau = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-    r_h_DNNscore_bkg_tautau = 1 - i_h_DNNscore_bkg_tautau
+    # r_h_DNNscore_bkg_tautau = 1 - i_h_DNNscore_bkg_tautau
 
     cmap = plt.get_cmap('viridis')
     fig, ax = plt.subplots(figsize=(10,10))
-    ax.plot(r_h_DNNscore_bkg, i_h_DNNscore_sig, marker='o', linestyle='--', label='Inclusive', color=cmap(1/5))
-    ax.plot(r_h_DNNscore_bkg_etau, i_h_DNNscore_sig_etau, marker='o', linestyle='--', label='ETau', color=cmap(2/5))
-    ax.plot(r_h_DNNscore_bkg_mutau, i_h_DNNscore_sig_mutau, marker='o', linestyle='--', label='MuTau', color=cmap(3/5))
-    ax.plot(r_h_DNNscore_bkg_tautau, i_h_DNNscore_sig_tautau, marker='o', linestyle='--', label='TauTau', color=cmap(4/5))
-    SetStyle(ax, x_label=r"1-BKG", y_label=r"SIG", leg_loc='lower left')
+    ax.plot(i_h_DNNscore_bkg, i_h_DNNscore_sig, marker='o', linestyle='--', label='Inclusive', color=cmap(1/5))
+    ax.plot(i_h_DNNscore_bkg_etau, i_h_DNNscore_sig_etau, marker='o', linestyle='--', label='ETau', color=cmap(2/5))
+    ax.plot(i_h_DNNscore_bkg_mutau, i_h_DNNscore_sig_mutau, marker='o', linestyle='--', label='MuTau', color=cmap(3/5))
+    ax.plot(i_h_DNNscore_bkg_tautau, i_h_DNNscore_sig_tautau, marker='o', linestyle='--', label='TauTau', color=cmap(4/5))
+    SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_title=fancy_name, leg_loc='lower right')
     plt.savefig(odir + '/ROCcurve.png')
     plt.savefig(odir + '/ROCcurve.pdf')
+    plt.yscale('log')
+    plt.savefig(odir + '/ROCcurve_log.png')
+    plt.savefig(odir + '/ROCcurve_log.pdf')    
     plt.close()
 
     #################################################
@@ -230,7 +292,7 @@ if __name__ == "__main__" :
         fig, ax = plt.subplots(figsize=(10,10))
         ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
         ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-        SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_loc='upper center')
+        SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
         plt.savefig(odir_imass + '/DNNScore.png')
         plt.savefig(odir_imass + '/DNNScore.pdf')
         plt.close()
@@ -241,11 +303,27 @@ if __name__ == "__main__" :
         h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
         i_h_DNNscore_sig = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
         i_h_DNNscore_bkg = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-        r_h_DNNscore_bkg = 1 - i_h_DNNscore_bkg
+        # r_h_DNNscore_bkg = 1 - i_h_DNNscore_bkg
 
-        AX.plot(r_h_DNNscore_bkg, i_h_DNNscore_sig, marker='o', linestyle='--', color=cmap(i/len(test_masses_0)), label=f'M{mass}')
+        AX.plot(i_h_DNNscore_bkg, i_h_DNNscore_sig, marker='o', linestyle='--', color=cmap(i/len(test_masses_0)), label=f'M{mass}')
         
-    SetStyle(ax, x_label=r"1-BKG", y_label=r"SIG", leg_loc='lower left')
+    SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_loc='lower right')
+    plt.legend(ncol=3, fontsize=17)
     plt.savefig(odir + '/ROCcurve_Mass.png')
     plt.savefig(odir + '/ROCcurve_Mass.pdf')
+    plt.yscale('log')
+    plt.savefig(odir + '/ROCcurve_Mass_log.png')
+    plt.savefig(odir + '/ROCcurve_Mass_log.pdf')  
     plt.close()
+
+
+    eos_dir = f'/eos/user/e/evernazz/www/ZZbbtautau/B2GPlots/2024_06_14/{o_name}/DNNPlots/Res'
+    user = 'evernazz'
+    print(f" ### INFO: Copy results to {user}@lxplus.cern.ch")
+    print(f"           Inside directory {eos_dir}\n")
+
+    # [FIXME] Work-around for mkdir on eos
+    os.system(f'mkdir -p TMP_RESULTS_RES && cp index.php TMP_RESULTS_RES')
+    os.system(f'cp ' + odir + f'/*.p* TMP_RESULTS_RES')
+    os.system(f'rsync -rltv TMP_RESULTS_RES/* {user}@lxplus.cern.ch:{eos_dir}')
+    os.system(f'rm -r TMP_RESULTS_RES')
