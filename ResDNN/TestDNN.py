@@ -103,218 +103,218 @@ if __name__ == "__main__" :
         plt.figure(figsize=(12, 12))
         cmap = plt.get_cmap('tab20')
         for i in range(0,len(df)):
-            plt.plot(np.arange(0,len(df[i][0]['Training'])), df[i][0]['Training'], '.', linestyle='--', color=cmap(2*i+1))
+            plt.plot(np.arange(0,len(df[i][0]['Training'])), df[i][0]['Training'], '.', linestyle='--', color=cmap(2*i+1), label=f"Training {i}")
         for i in range(0,len(df)):
-            plt.plot(9*np.arange(1,len(df[i][0]['Validation'])+1), df[i][0]['Validation'], 'o', linestyle='-', color=cmap(2*i), label=f"Model {i}")
+            plt.plot(9*np.arange(1,len(df[i][0]['Validation'])+1), df[i][0]['Validation'], 'o', linestyle='-', color=cmap(2*i), label=f"Validation {i}")
         plt.xlabel('Sub-Epoch')
         plt.ylabel('Loss')
-        plt.legend(loc='upper right')
+        plt.legend(loc='upper right', ncol=2, title=f'Model {num}')
         plt.grid()
         plt.title(f'Loss History ({fancy_name})')
         plt.savefig(odir + f'/TrainingHistory_{num}.png')
         plt.savefig(odir + f'/TrainingHistory_{num}.pdf')
 
-    ################################################
-    print(" ### INFO: Plotting Performance")
-    ################################################
+    # ################################################
+    # print(" ### INFO: Plotting Performance")
+    # ################################################
 
-    weight_dir = basedir + 'ensemble/'
+    # weight_dir = basedir + 'ensemble/'
 
-    ensemble_0 = Ensemble.from_save(weight_dir + f'selected_set_0_{run_name}')
-    ensemble_1 = Ensemble.from_save(weight_dir + f'selected_set_1_{run_name}')
+    # ensemble_0 = Ensemble.from_save(weight_dir + f'selected_set_0_{run_name}')
+    # ensemble_1 = Ensemble.from_save(weight_dir + f'selected_set_1_{run_name}')
 
-    indir = os.getcwd()+'/'+options.out+'/DNNInputs'
-    inpath = Path(indir)
+    # indir = os.getcwd()+'/'+options.out+'/DNNInputs'
+    # inpath = Path(indir)
 
-    set_0_fy = FoldYielder(inpath/'test_0.hdf5', input_pipe=inpath/'input_pipe_0.pkl')
-    set_1_fy = FoldYielder(inpath/'test_1.hdf5', input_pipe=inpath/'input_pipe_1.pkl')
+    # set_0_fy = FoldYielder(inpath/'test_0.hdf5', input_pipe=inpath/'input_pipe_0.pkl')
+    # set_1_fy = FoldYielder(inpath/'test_1.hdf5', input_pipe=inpath/'input_pipe_1.pkl')
 
-    ensemble_0.predict(set_1_fy)
-    ensemble_1.predict(set_0_fy)
+    # ensemble_0.predict(set_1_fy)
+    # ensemble_1.predict(set_0_fy)
 
-    df = load_full_df(fy=set_0_fy).append(load_full_df(fy=set_1_fy))
+    # df = load_full_df(fy=set_0_fy).append(load_full_df(fy=set_1_fy))
 
-    def SetStyle(ax, x_label, y_label, x_lim = None, y_lim = None, leg_title='', leg_loc='upper right'):
-        leg = plt.legend(loc=leg_loc, fontsize=20, title=leg_title, title_fontsize=18)
-        leg._legend_box.align = "left"
-        plt.xlabel(x_label)
-        plt.ylabel(y_label)
-        if x_lim: plt.xlim(x_lim)
-        if y_lim: plt.ylim(y_lim)
-        plt.grid()
-        for xtick in ax.xaxis.get_major_ticks():
-            xtick.set_pad(10)
-        mplhep.cms.label(data=False, rlabel='137.1 $fb^{-1}$ (13 TeV)', fontsize=20)
+    # def SetStyle(ax, x_label, y_label, x_lim = None, y_lim = None, leg_title='', leg_loc='upper right'):
+    #     leg = plt.legend(loc=leg_loc, fontsize=20, title=leg_title, title_fontsize=18)
+    #     leg._legend_box.align = "left"
+    #     plt.xlabel(x_label)
+    #     plt.ylabel(y_label)
+    #     if x_lim: plt.xlim(x_lim)
+    #     if y_lim: plt.ylim(y_lim)
+    #     plt.grid()
+    #     for xtick in ax.xaxis.get_major_ticks():
+    #         xtick.set_pad(10)
+    #     mplhep.cms.label(data=False, rlabel='137.1 $fb^{-1}$ (13 TeV)', fontsize=20)
     
-    binning = np.linspace(0,1,101)
-    bin_c = np.array((binning[:-1] + binning[1:]) / 2)
+    # binning = np.linspace(0,1,101)
+    # bin_c = np.array((binning[:-1] + binning[1:]) / 2)
 
-    #################################################
-    # Inclusive
-    #################################################
+    # #################################################
+    # # Inclusive
+    # #################################################
 
-    DNNscore_sig = df[df['gen_target'] == 1]['pred']
-    DNNscore_bkg = df[df['gen_target'] == 0]['pred']
+    # DNNscore_sig = df[df['gen_target'] == 1]['pred']
+    # DNNscore_bkg = df[df['gen_target'] == 0]['pred']
 
-    fig, ax = plt.subplots(figsize=(10,10))
-    ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
-    ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
-    plt.savefig(odir + '/DNNScore.png')
-    plt.savefig(odir + '/DNNScore.pdf')
-    plt.close()
+    # fig, ax = plt.subplots(figsize=(10,10))
+    # ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
+    # ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
+    # SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
+    # plt.savefig(odir + '/DNNScore.png')
+    # plt.savefig(odir + '/DNNScore.pdf')
+    # plt.close()
 
-    h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
-    h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
-    h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
-    h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
-    i_h_DNNscore_sig = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
-    i_h_DNNscore_bkg = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-    # r_h_DNNscore_bkg = 1 - i_h_DNNscore_bkg
+    # h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
+    # h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
+    # h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
+    # h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
+    # i_h_DNNscore_sig = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
+    # i_h_DNNscore_bkg = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
+    # # r_h_DNNscore_bkg = 1 - i_h_DNNscore_bkg
 
-    #################################################
-    # Etau
-    #################################################
+    # #################################################
+    # # Etau
+    # #################################################
 
-    df_etau = df[df.channel==2]
-    DNNscore_sig = df_etau[df_etau['gen_target'] == 1]['pred']
-    DNNscore_bkg = df_etau[df_etau['gen_target'] == 0]['pred']
+    # df_etau = df[df.channel==2]
+    # DNNscore_sig = df_etau[df_etau['gen_target'] == 1]['pred']
+    # DNNscore_bkg = df_etau[df_etau['gen_target'] == 0]['pred']
 
-    fig, ax = plt.subplots(figsize=(10,10))
-    ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
-    ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
-    plt.savefig(odir + '/DNNScore_eTau.png')
-    plt.savefig(odir + '/DNNScore_eTau.pdf')
-    plt.close()
+    # fig, ax = plt.subplots(figsize=(10,10))
+    # ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
+    # ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
+    # SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
+    # plt.savefig(odir + '/DNNScore_eTau.png')
+    # plt.savefig(odir + '/DNNScore_eTau.pdf')
+    # plt.close()
 
-    h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
-    h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
-    h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
-    h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
-    i_h_DNNscore_sig_etau = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
-    i_h_DNNscore_bkg_etau = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-    # r_h_DNNscore_bkg_etau = 1 - i_h_DNNscore_bkg_etau
+    # h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
+    # h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
+    # h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
+    # h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
+    # i_h_DNNscore_sig_etau = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
+    # i_h_DNNscore_bkg_etau = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
+    # # r_h_DNNscore_bkg_etau = 1 - i_h_DNNscore_bkg_etau
 
-    #################################################
-    # Mutau
-    #################################################
+    # #################################################
+    # # Mutau
+    # #################################################
 
-    df_mutau = df[df.channel==1]
-    DNNscore_sig = df_mutau[df_mutau['gen_target'] == 1]['pred']
-    DNNscore_bkg = df_mutau[df_mutau['gen_target'] == 0]['pred']
+    # df_mutau = df[df.channel==1]
+    # DNNscore_sig = df_mutau[df_mutau['gen_target'] == 1]['pred']
+    # DNNscore_bkg = df_mutau[df_mutau['gen_target'] == 0]['pred']
 
-    fig, ax = plt.subplots(figsize=(10,10))
-    ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
-    ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
-    plt.savefig(odir + '/DNNScore_muTau.png')
-    plt.savefig(odir + '/DNNScore_muTau.pdf')
-    plt.close()
+    # fig, ax = plt.subplots(figsize=(10,10))
+    # ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
+    # ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
+    # SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
+    # plt.savefig(odir + '/DNNScore_muTau.png')
+    # plt.savefig(odir + '/DNNScore_muTau.pdf')
+    # plt.close()
 
-    h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
-    h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
-    h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
-    h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
-    i_h_DNNscore_sig_mutau = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
-    i_h_DNNscore_bkg_mutau = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-    # r_h_DNNscore_bkg_mutau = 1 - i_h_DNNscore_bkg_mutau
+    # h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
+    # h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
+    # h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
+    # h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
+    # i_h_DNNscore_sig_mutau = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
+    # i_h_DNNscore_bkg_mutau = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
+    # # r_h_DNNscore_bkg_mutau = 1 - i_h_DNNscore_bkg_mutau
 
-    #################################################
-    # Tautau
-    #################################################
+    # #################################################
+    # # Tautau
+    # #################################################
 
-    df_tautau = df[df.channel==0]
-    DNNscore_sig = df_tautau[df_tautau['gen_target'] == 1]['pred']
-    DNNscore_bkg = df_tautau[df_tautau['gen_target'] == 0]['pred']
+    # df_tautau = df[df.channel==0]
+    # DNNscore_sig = df_tautau[df_tautau['gen_target'] == 1]['pred']
+    # DNNscore_bkg = df_tautau[df_tautau['gen_target'] == 0]['pred']
 
-    fig, ax = plt.subplots(figsize=(10,10))
-    ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
-    ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
-    plt.savefig(odir + '/DNNScore_tauTau.png')
-    plt.savefig(odir + '/DNNScore_tauTau.pdf')
-    plt.close()
+    # fig, ax = plt.subplots(figsize=(10,10))
+    # ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
+    # ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
+    # SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
+    # plt.savefig(odir + '/DNNScore_tauTau.png')
+    # plt.savefig(odir + '/DNNScore_tauTau.pdf')
+    # plt.close()
 
-    h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
-    h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
-    h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
-    h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
-    i_h_DNNscore_sig_tautau = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
-    i_h_DNNscore_bkg_tautau = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-    # r_h_DNNscore_bkg_tautau = 1 - i_h_DNNscore_bkg_tautau
+    # h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
+    # h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
+    # h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
+    # h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
+    # i_h_DNNscore_sig_tautau = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
+    # i_h_DNNscore_bkg_tautau = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
+    # # r_h_DNNscore_bkg_tautau = 1 - i_h_DNNscore_bkg_tautau
 
-    cmap = plt.get_cmap('viridis')
-    fig, ax = plt.subplots(figsize=(10,10))
-    ax.plot(i_h_DNNscore_bkg, i_h_DNNscore_sig, marker='o', linestyle='--', label='Inclusive', color=cmap(1/5))
-    ax.plot(i_h_DNNscore_bkg_etau, i_h_DNNscore_sig_etau, marker='o', linestyle='--', label='ETau', color=cmap(2/5))
-    ax.plot(i_h_DNNscore_bkg_mutau, i_h_DNNscore_sig_mutau, marker='o', linestyle='--', label='MuTau', color=cmap(3/5))
-    ax.plot(i_h_DNNscore_bkg_tautau, i_h_DNNscore_sig_tautau, marker='o', linestyle='--', label='TauTau', color=cmap(4/5))
-    SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_title=fancy_name, leg_loc='lower right')
-    plt.savefig(odir + '/ROCcurve.png')
-    plt.savefig(odir + '/ROCcurve.pdf')
-    plt.yscale('log')
-    plt.savefig(odir + '/ROCcurve_log.png')
-    plt.savefig(odir + '/ROCcurve_log.pdf')    
-    plt.close()
+    # cmap = plt.get_cmap('viridis')
+    # fig, ax = plt.subplots(figsize=(10,10))
+    # ax.plot(i_h_DNNscore_bkg, i_h_DNNscore_sig, marker='o', linestyle='--', label='Inclusive', color=cmap(1/5))
+    # ax.plot(i_h_DNNscore_bkg_etau, i_h_DNNscore_sig_etau, marker='o', linestyle='--', label='ETau', color=cmap(2/5))
+    # ax.plot(i_h_DNNscore_bkg_mutau, i_h_DNNscore_sig_mutau, marker='o', linestyle='--', label='MuTau', color=cmap(3/5))
+    # ax.plot(i_h_DNNscore_bkg_tautau, i_h_DNNscore_sig_tautau, marker='o', linestyle='--', label='TauTau', color=cmap(4/5))
+    # SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_title=fancy_name, leg_loc='lower right')
+    # plt.savefig(odir + '/ROCcurve.png')
+    # plt.savefig(odir + '/ROCcurve.pdf')
+    # plt.yscale('log')
+    # plt.savefig(odir + '/ROCcurve_log.png')
+    # plt.savefig(odir + '/ROCcurve_log.pdf')    
+    # plt.close()
 
-    #################################################
-    # Different masses
-    #################################################
+    # #################################################
+    # # Different masses
+    # #################################################
 
-    cmap = plt.get_cmap('viridis')
-    fig, AX = plt.subplots(figsize=(10,10))
+    # cmap = plt.get_cmap('viridis')
+    # fig, AX = plt.subplots(figsize=(10,10))
 
-    # pdb.set_trace()
-    test_masses_0 = glob.glob(indir + '/test_M*_0.hdf5')
-    test_masses_1 = glob.glob(indir + '/test_M*_1.hdf5')
-    i = 0
-    for test_0_imass, test_1_imass in zip(test_masses_0, test_masses_1):
+    # # pdb.set_trace()
+    # test_masses_0 = glob.glob(indir + '/test_M*_0.hdf5')
+    # test_masses_1 = glob.glob(indir + '/test_M*_1.hdf5')
+    # i = 0
+    # for test_0_imass, test_1_imass in zip(test_masses_0, test_masses_1):
 
-        i = i + 1
-        mass = test_0_imass.split("test_M")[1].split("_0.hdf5")[0]
-        odir_imass = basedir + f'/TestingPerformance/M{mass}/'
-        os.system('mkdir -p ' + odir_imass)
+    #     i = i + 1
+    #     mass = test_0_imass.split("test_M")[1].split("_0.hdf5")[0]
+    #     odir_imass = basedir + f'/TestingPerformance/M{mass}/'
+    #     os.system('mkdir -p ' + odir_imass)
 
-        print(f'\n ### Mass = {mass} GeV')
+    #     print(f'\n ### Mass = {mass} GeV')
 
-        set_0_fy_imass = FoldYielder(test_0_imass, input_pipe=inpath/'input_pipe_0.pkl')
-        set_1_fy_imass = FoldYielder(test_1_imass, input_pipe=inpath/'input_pipe_1.pkl')
+    #     set_0_fy_imass = FoldYielder(test_0_imass, input_pipe=inpath/'input_pipe_0.pkl')
+    #     set_1_fy_imass = FoldYielder(test_1_imass, input_pipe=inpath/'input_pipe_1.pkl')
 
-        ensemble_0.predict(set_0_fy_imass)
-        ensemble_1.predict(set_1_fy_imass)
+    #     ensemble_0.predict(set_0_fy_imass)
+    #     ensemble_1.predict(set_1_fy_imass)
 
-        df = load_full_df(fy=set_0_fy_imass).append(load_full_df(fy=set_1_fy_imass))
+    #     df = load_full_df(fy=set_0_fy_imass).append(load_full_df(fy=set_1_fy_imass))
 
-        DNNscore_sig = df[df['gen_target'] == 1]['pred']
-        DNNscore_bkg = df[df['gen_target'] == 0]['pred']
+    #     DNNscore_sig = df[df['gen_target'] == 1]['pred']
+    #     DNNscore_bkg = df[df['gen_target'] == 0]['pred']
 
-        fig, ax = plt.subplots(figsize=(10,10))
-        ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
-        ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-        SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
-        plt.savefig(odir_imass + '/DNNScore.png')
-        plt.savefig(odir_imass + '/DNNScore.pdf')
-        plt.close()
+    #     fig, ax = plt.subplots(figsize=(10,10))
+    #     ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
+    #     ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
+    #     SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
+    #     plt.savefig(odir_imass + '/DNNScore.png')
+    #     plt.savefig(odir_imass + '/DNNScore.pdf')
+    #     plt.close()
 
-        h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
-        h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
-        h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
-        h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
-        i_h_DNNscore_sig = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
-        i_h_DNNscore_bkg = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-        # r_h_DNNscore_bkg = 1 - i_h_DNNscore_bkg
+    #     h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
+    #     h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
+    #     h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
+    #     h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
+    #     i_h_DNNscore_sig = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
+    #     i_h_DNNscore_bkg = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
+    #     # r_h_DNNscore_bkg = 1 - i_h_DNNscore_bkg
 
-        AX.plot(i_h_DNNscore_bkg, i_h_DNNscore_sig, marker='o', linestyle='--', color=cmap(i/len(test_masses_0)), label=f'M{mass}')
+    #     AX.plot(i_h_DNNscore_bkg, i_h_DNNscore_sig, marker='o', linestyle='--', color=cmap(i/len(test_masses_0)), label=f'M{mass}')
         
-    SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_loc='lower right')
-    plt.legend(ncol=3, fontsize=17)
-    plt.savefig(odir + '/ROCcurve_Mass.png')
-    plt.savefig(odir + '/ROCcurve_Mass.pdf')
-    plt.yscale('log')
-    plt.savefig(odir + '/ROCcurve_Mass_log.png')
-    plt.savefig(odir + '/ROCcurve_Mass_log.pdf')  
-    plt.close()
+    # SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_loc='lower right')
+    # plt.legend(ncol=3, fontsize=17)
+    # plt.savefig(odir + '/ROCcurve_Mass.png')
+    # plt.savefig(odir + '/ROCcurve_Mass.pdf')
+    # plt.yscale('log')
+    # plt.savefig(odir + '/ROCcurve_Mass_log.png')
+    # plt.savefig(odir + '/ROCcurve_Mass_log.pdf')  
+    # plt.close()
 
 
     eos_dir = f'/eos/user/e/evernazz/www/ZZbbtautau/B2GPlots/2024_06_14/{o_name}/DNNPlots/Res'

@@ -105,12 +105,12 @@ if __name__ == "__main__" :
         plt.figure(figsize=(12, 12))
         cmap = plt.get_cmap('tab20')
         for i in range(0,len(df)):
-            plt.plot(np.arange(0,len(df[i][0]['Training'])), df[i][0]['Training'], '.', linestyle='--', color=cmap(2*i+1))
+            plt.plot(np.arange(0,len(df[i][0]['Training'])), df[i][0]['Training'], '.', linestyle='--', color=cmap(2*i+1), label=f"Training {i}")
         for i in range(0,len(df)):
-            plt.plot(9*np.arange(1,len(df[i][0]['Validation'])+1), df[i][0]['Validation'], 'o', linestyle='-', color=cmap(2*i), label=f"Model {i}")
+            plt.plot(9*np.arange(1,len(df[i][0]['Validation'])+1), df[i][0]['Validation'], 'o', linestyle='-', color=cmap(2*i), label=f"Validation {i}")
         plt.xlabel('Sub-Epoch')
         plt.ylabel('Loss')
-        plt.legend(loc='upper right')
+        plt.legend(loc='upper right', ncol=2, title=f'Model {num}')
         plt.grid()
         plt.title(f'Loss History ({fancy_name})')
         plt.savefig(odir + f'/TrainingHistory_{num}.png')
