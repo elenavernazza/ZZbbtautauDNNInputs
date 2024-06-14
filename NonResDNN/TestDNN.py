@@ -16,6 +16,10 @@ import numpy as np
 import mplhep
 plt.style.use(mplhep.style.CMS)
 
+import warnings, logging
+warnings.filterwarnings("ignore", message=".*Type 3 font.*")
+logging.getLogger('matplotlib').setLevel(logging.ERROR)
+
 def load_full_df(fy:FoldYielder) -> pd.DataFrame:
     df = fy.get_df(inc_inputs=True, verbose=False)
     # df['gen_sample']    = fy.get_column('gen_sample')
@@ -41,14 +45,17 @@ if __name__ == "__main__" :
 
     from optparse import OptionParser
     parser = OptionParser()
-    parser.add_option("--run",       dest="run",      default='0')
-    parser.add_option("--out",       dest="out",      default='DNNWeight_0')
+    parser.add_option("--run",       dest="run",       default='0')
+    parser.add_option("--out",       dest="out",       default='DNNWeight_0')
+    parser.add_option("--from_file", dest="from_file", default=False,    action='store_true')
     (options, args) = parser.parse_args()
 
     run_name = options.run
     basedir = os.getcwd()+'/'+options.out+'/'
     odir = basedir + '/TestingPerformance/'
+    npdir = basedir + '/TestingPerformance/data/'
     os.system('mkdir -p ' + odir)
+    os.system('mkdir -p ' + npdir)
 
     ################################################
     print(" ### INFO: Plotting Feature Importance")
@@ -117,150 +124,215 @@ if __name__ == "__main__" :
         plt.savefig(odir + f'/TrainingHistory_{num}.pdf')
 
     ################################################
+    print(" ### INFO: Reading inputs")
+    ################################################
+
+    if options.from_file:
+        df_test = pd.read_hdf(npdir+'/df_test.hdf5')
+        df_train = pd.read_hdf(npdir+'/df_train.hdf5')
+
+    else:
+        weight_dir = basedir + 'ensemble/'
+
+        ensemble_0 = Ensemble.from_save(weight_dir + f'selected_set_0_{run_name}')
+        ensemble_1 = Ensemble.from_save(weight_dir + f'selected_set_1_{run_name}')
+
+        indir = os.getcwd()+'/'+options.out+'/DNNInputs'
+        inpath = Path(indir)
+
+        set_0_fy = FoldYielder(inpath/'test_0.hdf5', input_pipe=inpath/'input_pipe_0.pkl')
+        set_1_fy = FoldYielder(inpath/'test_1.hdf5', input_pipe=inpath/'input_pipe_1.pkl')
+
+        ensemble_0.predict(set_1_fy)
+        ensemble_1.predict(set_0_fy)
+
+        df_test = load_full_df(fy=set_0_fy).append(load_full_df(fy=set_1_fy))
+        df_test.to_hdf(npdir+'/df_test.hdf5', '*')
+
+        set_0_fy = FoldYielder(inpath/'train_0.hdf5', input_pipe=inpath/'input_pipe_0.pkl')
+        set_1_fy = FoldYielder(inpath/'train_1.hdf5', input_pipe=inpath/'input_pipe_1.pkl')
+
+        ensemble_0.predict(set_1_fy)
+        ensemble_1.predict(set_0_fy)
+                        
+        df_train = load_full_df(fy=set_0_fy).append(load_full_df(fy=set_1_fy))
+        df_train.to_hdf(npdir+'/df_train.hdf5', '*')
+
+    ################################################
     print(" ### INFO: Plotting Performance")
     ################################################
 
-    weight_dir = basedir + 'ensemble/'
-
-    ensemble_0 = Ensemble.from_save(weight_dir + f'selected_set_0_{run_name}')
-    ensemble_1 = Ensemble.from_save(weight_dir + f'selected_set_1_{run_name}')
-
-    indir = os.getcwd()+'/'+options.out+'/DNNInputs'
-    inpath = Path(indir)
-
-    set_0_fy = FoldYielder(inpath/'test_0.hdf5', input_pipe=inpath/'input_pipe_0.pkl')
-    set_1_fy = FoldYielder(inpath/'test_1.hdf5', input_pipe=inpath/'input_pipe_1.pkl')
-
-    ensemble_0.predict(set_1_fy)
-    ensemble_1.predict(set_0_fy)
-
-    df = load_full_df(fy=set_0_fy).append(load_full_df(fy=set_1_fy))
-
-    def SetStyle(ax, x_label, y_label, x_lim = None, y_lim = None, leg_title='', leg_loc='upper right'):
-        leg = plt.legend(loc=leg_loc, fontsize=20, title=leg_title, title_fontsize=18)
-        leg._legend_box.align = "left"
+    def SetStyle(ax, x_label, y_label, x_lim = None, y_lim = None, leg_title='', leg_loc='upper right', ncol=1):
+        leg = plt.legend(loc=leg_loc, fontsize=20, title=leg_title, title_fontsize=18, ncol=ncol)
+        # leg._legend_box.align = "left"
         plt.xlabel(x_label)
         plt.ylabel(y_label)
         if x_lim: plt.xlim(x_lim)
         if y_lim: plt.ylim(y_lim)
         plt.grid()
+        ax.grid()
         for xtick in ax.xaxis.get_major_ticks():
             xtick.set_pad(10)
-        mplhep.cms.label(data=False, rlabel='137.1 $fb^{-1}$ (13 TeV)', fontsize=20)
+        mplhep.cms.label(data=False, rlabel='137 $fb^{-1}$ (13 TeV)', fontsize=20)
     
     binning = np.linspace(0,1,101)
     bin_c = np.array((binning[:-1] + binning[1:]) / 2)
+    def GetROC(DNNscore_sig, DNNscore_bkg):
+        h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
+        h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
+        h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
+        h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
+        i_h_DNNscore_sig = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
+        i_h_DNNscore_bkg = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
+        return i_h_DNNscore_sig, i_h_DNNscore_bkg
 
     #################################################
     # Inclusive
     #################################################
 
-    DNNscore_sig = df[df['gen_target'] == 1]['pred']
-    DNNscore_bkg = df[df['gen_target'] == 0]['pred']
+    def PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, channel, fancy_channel):
+        fig, ax = plt.subplots(figsize=(10,10))
+        ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='blue', label='Signal')
+        ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='red', label='Background')
+        SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name+" - "+fancy_channel, leg_loc='upper center')
+        # plt.savefig(odir + f'/DNNScore_Train_{channel}.png')
+        # plt.savefig(odir + f'/DNNScore_Train_{channel}.pdf')
+        plt.yscale('log')
+        plt.savefig(odir + f'/DNNScore_Train_{channel}_log.png')
+        plt.savefig(odir + f'/DNNScore_Train_{channel}_log.pdf')
+        plt.close()
 
-    fig, ax = plt.subplots(figsize=(10,10))
-    ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
-    ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
-    plt.savefig(odir + '/DNNScore.png')
-    plt.savefig(odir + '/DNNScore.pdf')
-    plt.close()
+    def PlotTrainTestDNNDistribution(DNNscore_sig, DNNscore_bkg, DNNscore_sig_train, DNNscore_bkg_train, binning, fancy_name, channel, fancy_channel):
+        fig, ax = plt.subplots(figsize=(10,10))
+        ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='blue', label='Signal Testing')
+        ax.hist(DNNscore_sig_train, bins=binning, density=True, linestyle='--', linewidth=2, histtype='step', color='darkblue', label='Signal Training')
+        ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='red', label='Background Testing')
+        ax.hist(DNNscore_bkg_train, bins=binning, density=True, linestyle='--', linewidth=2, histtype='step', color='darkred', label='Background Training')
+        SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name + " - " + fancy_channel, leg_loc='upper center', ncol=2)
+        # plt.savefig(odir + f'/DNNScore_TrainTest_{channel}.png')
+        # plt.savefig(odir + f'/DNNScore_TrainTest_{channel}.pdf')
+        plt.yscale('log')
+        plt.savefig(odir + f'/DNNScore_TrainTest_{channel}_log.png')
+        plt.savefig(odir + f'/DNNScore_TrainTest_{channel}_log.pdf')
+        plt.close()
 
-    h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
-    h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
-    h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
-    h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
-    i_h_DNNscore_sig = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
-    i_h_DNNscore_bkg = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-    # r_h_DNNscore_bkg = 1 - i_h_DNNscore_bkg
+    DNNscore_sig = df_test[df_test['gen_target'] == 1]['pred']
+    DNNscore_bkg = df_test[df_test['gen_target'] == 0]['pred']
+    DNNscore_sig_train = df_train[df_train['gen_target'] == 1]['pred']
+    DNNscore_bkg_train = df_train[df_train['gen_target'] == 0]['pred']
+
+    PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "Inclusive", "Inclusive")
+    PlotTrainTestDNNDistribution(DNNscore_sig, DNNscore_bkg, DNNscore_sig_train, DNNscore_bkg_train, binning, fancy_name, "Inclusive", "Inclusive")
+
+    Train_ROC_sig, Train_ROC_bkg = GetROC(DNNscore_sig, DNNscore_bkg)
+    Test_ROC_sig, Test_ROC_bkg = GetROC(DNNscore_sig_train, DNNscore_bkg_train)
 
     #################################################
     # Etau
     #################################################
 
-    df_etau = df[df.channel==2]
+    df_etau = df_test[df_test.channel==2]
     DNNscore_sig = df_etau[df_etau['gen_target'] == 1]['pred']
     DNNscore_bkg = df_etau[df_etau['gen_target'] == 0]['pred']
+    df_etau_train = df_train[df_train.channel==2]
+    DNNscore_sig_train = df_etau_train[df_etau_train['gen_target'] == 1]['pred']
+    DNNscore_bkg_train = df_etau_train[df_etau_train['gen_target'] == 0]['pred']
 
-    fig, ax = plt.subplots(figsize=(10,10))
-    ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
-    ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
-    plt.savefig(odir + '/DNNScore_eTau.png')
-    plt.savefig(odir + '/DNNScore_eTau.pdf')
-    plt.close()
+    PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "ETau", "$\\tau_{e}\\tau_{h}$")
+    PlotTrainTestDNNDistribution(DNNscore_sig, DNNscore_bkg, DNNscore_sig_train, DNNscore_bkg_train, binning, fancy_name, "ETau", "$\\tau_{e}\\tau_{h}$")
 
-    h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
-    h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
-    h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
-    h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
-    i_h_DNNscore_sig_etau = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
-    i_h_DNNscore_bkg_etau = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-    # r_h_DNNscore_bkg_etau = 1 - i_h_DNNscore_bkg_etau
+    Train_ROC_sig_etau, Train_ROC_bkg_etau = GetROC(DNNscore_sig, DNNscore_bkg)
+    Test_ROC_sig_etau, Test_ROC_bkg_etau = GetROC(DNNscore_sig_train, DNNscore_bkg_train)
 
     #################################################
     # Mutau
     #################################################
 
-    df_mutau = df[df.channel==1]
+    df_mutau = df_test[df_test.channel==1]
     DNNscore_sig = df_mutau[df_mutau['gen_target'] == 1]['pred']
     DNNscore_bkg = df_mutau[df_mutau['gen_target'] == 0]['pred']
+    df_mutau_train = df_train[df_train.channel==1]
+    DNNscore_sig_train = df_mutau_train[df_mutau_train['gen_target'] == 1]['pred']
+    DNNscore_bkg_train = df_mutau_train[df_mutau_train['gen_target'] == 0]['pred']
 
-    fig, ax = plt.subplots(figsize=(10,10))
-    ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
-    ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
-    plt.savefig(odir + '/DNNScore_muTau.png')
-    plt.savefig(odir + '/DNNScore_muTau.pdf')
-    plt.close()
+    PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "MuuTau", "$\\tau_{\\mu}\\tau_{h}$")
+    PlotTrainTestDNNDistribution(DNNscore_sig, DNNscore_bkg, DNNscore_sig_train, DNNscore_bkg_train, binning, fancy_name, "MuTau", "$\\tau_{\\mu}\\tau_{h}$")
 
-    h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
-    h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
-    h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
-    h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
-    i_h_DNNscore_sig_mutau = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
-    i_h_DNNscore_bkg_mutau = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-    # r_h_DNNscore_bkg_mutau = 1 - i_h_DNNscore_bkg_mutau
+    Train_ROC_sig_mutau, Train_ROC_bkg_mutau = GetROC(DNNscore_sig, DNNscore_bkg)
+    Test_ROC_sig_mutau, Test_ROC_bkg_mutau = GetROC(DNNscore_sig_train, DNNscore_bkg_train)
 
     #################################################
     # Tautau
     #################################################
 
-    df_tautau = df[df.channel==0]
+    df_tautau = df_test[df_test.channel==0]
     DNNscore_sig = df_tautau[df_tautau['gen_target'] == 1]['pred']
     DNNscore_bkg = df_tautau[df_tautau['gen_target'] == 0]['pred']
+    df_tautau_train = df_train[df_train.channel==0]
+    DNNscore_sig_train = df_tautau_train[df_tautau_train['gen_target'] == 1]['pred']
+    DNNscore_bkg_train = df_tautau_train[df_tautau_train['gen_target'] == 0]['pred']
 
-    fig, ax = plt.subplots(figsize=(10,10))
-    ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='Blue', label='Signal')
-    ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='Red', label='Background')
-    SetStyle(ax, x_label=r"DNN Score", y_label="A.U.", leg_title=fancy_name, leg_loc='upper center')
-    plt.savefig(odir + '/DNNScore_tauTau.png')
-    plt.savefig(odir + '/DNNScore_tauTau.pdf')
-    plt.close()
+    PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "TauTau", "$\\tau_{h}\\tau_{h}$")
+    PlotTrainTestDNNDistribution(DNNscore_sig, DNNscore_bkg, DNNscore_sig_train, DNNscore_bkg_train, binning, fancy_name, "TauTau", "$\\tau_{h}\\tau_{h}$")
 
-    h_DNNscore_sig, _ = np.histogram(DNNscore_sig, bins=binning)
-    h_DNNscore_bkg, _ = np.histogram(DNNscore_bkg, bins=binning)
-    h_DNNscore_sig_norm = h_DNNscore_sig/len(DNNscore_sig)
-    h_DNNscore_bkg_norm = h_DNNscore_bkg/len(DNNscore_bkg)
-    i_h_DNNscore_sig_tautau = np.array([np.sum(h_DNNscore_sig_norm[bin_c >= i]) for i in binning])
-    i_h_DNNscore_bkg_tautau = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
-    # r_h_DNNscore_bkg_tautau = 1 - i_h_DNNscore_bkg_tautau
+    Train_ROC_sig_tautau, Train_ROC_bkg_tautau = GetROC(DNNscore_sig, DNNscore_bkg)
+    Test_ROC_sig_tautau, Test_ROC_bkg_tautau = GetROC(DNNscore_sig_train, DNNscore_bkg_train)
+
+    #################################################
+    # ROC CURVES
+    #################################################
 
     cmap = plt.get_cmap('viridis')
     fig, ax = plt.subplots(figsize=(10,10))
-    ax.plot(i_h_DNNscore_bkg, i_h_DNNscore_sig, marker='o', linestyle='--', label='Inclusive', color=cmap(1/5))
-    ax.plot(i_h_DNNscore_bkg_etau, i_h_DNNscore_sig_etau, marker='o', linestyle='--', label='ETau', color=cmap(2/5))
-    ax.plot(i_h_DNNscore_bkg_mutau, i_h_DNNscore_sig_mutau, marker='o', linestyle='--', label='MuTau', color=cmap(3/5))
-    ax.plot(i_h_DNNscore_bkg_tautau, i_h_DNNscore_sig_tautau, marker='o', linestyle='--', label='TauTau', color=cmap(4/5))
-    SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_title=fancy_name, leg_loc='lower right')
+    plt.plot(Train_ROC_bkg, Train_ROC_sig, marker='o', linestyle='--', label=f'Inclusive: {np.sum(Train_ROC_sig):.2f}', color=cmap(1/5))
+    plt.plot(Train_ROC_bkg_etau, Train_ROC_sig_etau, marker='o', linestyle='--', label=f'ETau: {np.sum(Train_ROC_sig_etau):.2f}', color=cmap(2/5))
+    plt.plot(Train_ROC_bkg_mutau, Train_ROC_sig_mutau, marker='o', linestyle='--', label=f'MuTau: {np.sum(Train_ROC_sig_mutau):.2f}', color=cmap(3/5))
+    plt.plot(Train_ROC_bkg_tautau, Train_ROC_sig_tautau, marker='o', linestyle='--', label=f'TauTau: {np.sum(Train_ROC_sig_tautau):.2f}', color=cmap(4/5))
+    SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_title=fancy_name + " [AUROC]", leg_loc='lower right')
+    plt.grid()
     plt.savefig(odir + '/ROCcurve.png')
     plt.savefig(odir + '/ROCcurve.pdf')
-    plt.yscale('log')
-    plt.savefig(odir + '/ROCcurve_log.png')
-    plt.savefig(odir + '/ROCcurve_log.pdf')    
+    # plt.yscale('log')
+    # plt.savefig(odir + '/ROCcurve_log.png')
+    # plt.savefig(odir + '/ROCcurve_log.pdf')
     plt.close()
 
-    # pdb.set_trace()
+    def CompareTrainTestROC(Train_bkg, Train_sig, Test_bkg, Test_sig, channel, fancy_channel):
+
+        # This will not work since the x is not the same
+        # cmap = plt.get_cmap('plasma')
+        # fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 10), gridspec_kw={'height_ratios': [7, 2]})
+        # ax1.plot(Train_bkg, Train_sig, marker='o', linestyle='--', label=f'Training: {np.sum(Train_sig):.2f}', color=cmap(1/5))
+        # ax1.plot(Test_bkg, Test_sig, marker='v', linestyle='--', label=f'Testing: {np.sum(Test_sig):.2f}', color=cmap(3/5))
+        # ax2.plot(Train_bkg, Train_sig/Test_sig, marker='o', linestyle='--', color='black')
+        # leg = ax1.legend(loc='lower right', fontsize=20, title=fancy_name + f" {fancy_channel}: [AUROC]", title_fontsize=18)
+        # leg._legend_box.align = "left"
+        # ax1.set_ylabel('SIG Efficiency')
+        # ax2.set_xlabel('BKG Efficiency')
+        # ax2.set_ylabel('Ratio')
+        # ax1.grid()
+        # ax2.grid()
+        # ax2.set_ylim(0.95,1.05)
+        # mplhep.cms.label(data=False, rlabel='137 $fb^{-1}$ (13 TeV)', fontsize=20, ax=ax1)
+        # plt.savefig(odir + f'/ROCcurve_{channel}.png')
+        # plt.savefig(odir + f'/ROCcurve_{channel}.pdf')
+        # plt.close()
+
+        cmap = plt.get_cmap('plasma')
+        fig, ax = plt.subplots(figsize=(10,10))
+        plt.plot(Train_bkg, Train_sig, marker='o', linestyle='--', label=f'Training: {np.sum(Train_sig):.2f}', color=cmap(1/5))
+        plt.plot(Test_bkg, Test_sig, marker='v', linestyle='--', label=f'Testing: {np.sum(Test_sig):.2f}', color=cmap(3/5))
+        SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_title=fancy_name + f"  {fancy_channel}: [AUROC]", leg_loc='lower right')
+        mplhep.cms.label(data=False, rlabel='137 $fb^{-1}$ (13 TeV)', fontsize=20)
+        plt.grid()
+        plt.savefig(odir + f'/ROCcurve_{channel}.png')
+        plt.savefig(odir + f'/ROCcurve_{channel}.pdf')
+        plt.close()
+
+    CompareTrainTestROC(Train_ROC_bkg, Train_ROC_sig, Test_ROC_bkg, Test_ROC_sig, 'Inclusive', 'Inclusive')
+    CompareTrainTestROC(Train_ROC_bkg_etau, Train_ROC_sig_etau, Test_ROC_bkg_etau, Test_ROC_sig_etau, 'ETau', "$\\tau_{e}\\tau_{h}$")
+    CompareTrainTestROC(Train_ROC_bkg_mutau, Train_ROC_sig_mutau, Test_ROC_bkg_mutau, Test_ROC_sig_mutau, 'MuTau', "$\\tau_{\\mu}\\tau_{h}$")
+    CompareTrainTestROC(Train_ROC_bkg_tautau, Train_ROC_sig_tautau, Test_ROC_bkg_tautau, Test_ROC_sig_tautau, 'TauTau', "$\\tau_{h}\\tau_{h}$")
 
     eos_dir = f'/eos/user/e/evernazz/www/ZZbbtautau/B2GPlots/2024_06_14/{o_name}/DNNPlots/NonRes'
     user = 'evernazz'
