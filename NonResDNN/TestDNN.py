@@ -152,8 +152,8 @@ if __name__ == "__main__" :
         set_0_fy = FoldYielder(inpath/'train_0.hdf5', input_pipe=inpath/'input_pipe_0.pkl')
         set_1_fy = FoldYielder(inpath/'train_1.hdf5', input_pipe=inpath/'input_pipe_1.pkl')
 
-        ensemble_0.predict(set_1_fy)
-        ensemble_1.predict(set_0_fy)
+        ensemble_0.predict(set_0_fy)
+        ensemble_1.predict(set_1_fy)
                         
         df_train = load_full_df(fy=set_0_fy).append(load_full_df(fy=set_1_fy))
         df_train.to_hdf(npdir+'/df_train.hdf5', '*')
@@ -275,8 +275,8 @@ if __name__ == "__main__" :
     PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "TauTau", "$\\tau_{h}\\tau_{h}$")
     PlotTrainTestDNNDistribution(DNNscore_sig, DNNscore_bkg, DNNscore_sig_train, DNNscore_bkg_train, binning, fancy_name, "TauTau", "$\\tau_{h}\\tau_{h}$")
 
-    Train_ROC_sig_tautau, Train_ROC_bkg_tautau = GetROC(DNNscore_sig, DNNscore_bkg)
-    Test_ROC_sig_tautau, Test_ROC_bkg_tautau = GetROC(DNNscore_sig_train, DNNscore_bkg_train)
+    Test_ROC_sig_tautau, Test_ROC_bkg_tautau = GetROC(DNNscore_sig, DNNscore_bkg)
+    Train_ROC_sig_tautau, Train_ROC_bkg_tautau = GetROC(DNNscore_sig_train, DNNscore_bkg_train)
 
     #################################################
     # ROC CURVES
