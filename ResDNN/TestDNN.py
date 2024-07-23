@@ -172,7 +172,7 @@ if __name__ == "__main__" :
         ax.grid()
         for xtick in ax.xaxis.get_major_ticks():
             xtick.set_pad(10)
-        mplhep.cms.label(data=False, rlabel='137.1 $fb^{-1}$ (13 TeV)', fontsize=20)
+        mplhep.cms.label(data=False, llabel="Private Work", rlabel='137 $fb^{-1}$ (13 TeV)', fontsize=20)
     
     binning = np.linspace(0,1,101)
     bin_c = np.array((binning[:-1] + binning[1:]) / 2)
@@ -253,7 +253,7 @@ if __name__ == "__main__" :
     DNNscore_sig_train = df_mutau_train[df_mutau_train['gen_target'] == 1]['pred']
     DNNscore_bkg_train = df_mutau_train[df_mutau_train['gen_target'] == 0]['pred']
 
-    PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "MuuTau", "$\\tau_{\\mu}\\tau_{h}$")
+    PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "MuTau", "$\\tau_{\\mu}\\tau_{h}$")
     PlotTrainTestDNNDistribution(DNNscore_sig, DNNscore_bkg, DNNscore_sig_train, DNNscore_bkg_train, binning, fancy_name, "MuTau", "$\\tau_{\\mu}\\tau_{h}$")
 
     Train_ROC_sig_mutau, Train_ROC_bkg_mutau = GetROC(DNNscore_sig, DNNscore_bkg)
@@ -280,13 +280,16 @@ if __name__ == "__main__" :
     # ROC CURVES
     #################################################
 
+    def GetROCArea(ROC_bkg, ROC_sig):
+        return - np.trapz(ROC_sig, ROC_bkg)
+
     cmap = plt.get_cmap('viridis')
     fig, ax = plt.subplots(figsize=(10,10))
-    plt.plot(Train_ROC_bkg, Train_ROC_sig, marker='o', linestyle='--', label=f'Inclusive: {np.sum(Train_ROC_sig):.2f}', color=cmap(1/5))
-    plt.plot(Train_ROC_bkg_etau, Train_ROC_sig_etau, marker='o', linestyle='--', label=f'ETau: {np.sum(Train_ROC_sig_etau):.2f}', color=cmap(2/5))
-    plt.plot(Train_ROC_bkg_mutau, Train_ROC_sig_mutau, marker='o', linestyle='--', label=f'MuTau: {np.sum(Train_ROC_sig_mutau):.2f}', color=cmap(3/5))
-    plt.plot(Train_ROC_bkg_tautau, Train_ROC_sig_tautau, marker='o', linestyle='--', label=f'TauTau: {np.sum(Train_ROC_sig_tautau):.2f}', color=cmap(4/5))
-    SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_title=fancy_name + " [AUROC]", leg_loc='lower right')
+    plt.plot(Train_ROC_bkg, Train_ROC_sig, marker='o', linestyle='--', label=f'Inclusive: {GetROCArea(Train_ROC_bkg, Train_ROC_sig):.3f}', color=cmap(1/5))
+    plt.plot(Train_ROC_bkg_etau, Train_ROC_sig_etau, marker='o', linestyle='--', label=f'ETau: {GetROCArea(Train_ROC_bkg_etau, Train_ROC_sig_etau):.3f}', color=cmap(2/5))
+    plt.plot(Train_ROC_bkg_mutau, Train_ROC_sig_mutau, marker='o', linestyle='--', label=f'MuTau: {GetROCArea(Train_ROC_bkg_mutau, Train_ROC_sig_mutau):.3f}', color=cmap(3/5))
+    plt.plot(Train_ROC_bkg_tautau, Train_ROC_sig_tautau, marker='o', linestyle='--', label=f'TauTau: {GetROCArea(Train_ROC_bkg_tautau, Train_ROC_sig_tautau):.3f}', color=cmap(4/5))
+    SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_title=fancy_name + ": [AUROC]", leg_loc='lower right')
     plt.grid()
     plt.savefig(odir + '/ROCcurve.png')
     plt.savefig(odir + '/ROCcurve.pdf')
@@ -296,10 +299,9 @@ if __name__ == "__main__" :
 
         cmap = plt.get_cmap('plasma')
         fig, ax = plt.subplots(figsize=(10,10))
-        plt.plot(Train_bkg, Train_sig, marker='o', linestyle='--', label=f'Training: {np.sum(Train_sig):.2f}', color=cmap(1/5))
-        plt.plot(Test_bkg, Test_sig, marker='v', linestyle='--', label=f'Testing: {np.sum(Test_sig):.2f}', color=cmap(3/5))
-        SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_title=fancy_name + f"  {fancy_channel}: [AUROC]", leg_loc='lower right')
-        mplhep.cms.label(data=False, rlabel='137 $fb^{-1}$ (13 TeV)', fontsize=20)
+        plt.plot(Train_bkg, Train_sig, marker='o', linestyle='--', label=f'Training: {GetROCArea(Train_bkg, Train_sig):.3f}', color=cmap(1/5))
+        plt.plot(Test_bkg, Test_sig, marker='v', linestyle='--', label=f'Testing: {GetROCArea(Test_bkg, Test_sig):.3f}', color=cmap(3/5))
+        SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_title=fancy_name + f" {fancy_channel}: [AUROC]", leg_loc='lower right')
         plt.grid()
         plt.savefig(odir + f'/ROCcurve_{channel}.png')
         plt.savefig(odir + f'/ROCcurve_{channel}.pdf')
@@ -368,10 +370,10 @@ if __name__ == "__main__" :
 
         CompareTrainTestROC(Train_ROC_bkg, Train_ROC_sig, Test_ROC_bkg, Test_ROC_sig, f"M{mass}", f"Mass = {mass} GeV")
 
-        AX.plot(Test_ROC_bkg, Test_ROC_sig, marker='o', linestyle='--', color=cmap(i/len(test_masses_0)), label=f'M{mass}')
+        AX.plot(Test_ROC_bkg, Test_ROC_sig, marker='o', linestyle='--', color=cmap(i/len(test_masses_0)), label=f'M{mass}: {GetROCArea(Test_ROC_bkg, Test_ROC_sig):.3f}')
         
     SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_loc='lower right')
-    plt.legend(ncol=3, fontsize=17)
+    plt.legend(ncol=3, fontsize=17, title='Mass [GeV]: [AUROC]', title_fontsize=18)
     plt.savefig(odir + '/ROCcurve_Mass.png')
     plt.savefig(odir + '/ROCcurve_Mass.pdf')
     # plt.yscale('log')
