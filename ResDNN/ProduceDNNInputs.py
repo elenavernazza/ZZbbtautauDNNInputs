@@ -255,9 +255,9 @@ if __name__ == "__main__" :
             df_bkg['nev']        = nevents
             df_bkg['nev_w']      = nweightedevents
             df_bkg['gen_weight'] = df_bkg['genWeightFixed'] * df_bkg['puWeight']
-            df_sig['cor_weight'] = df_sig['trigSF'] * df_sig['PUjetID_SF'] * \
-                                   df_sig['L1PreFiringWeight_Nom'] * df_sig['idAndIsoAndFakeSF'] * \
-                                   df_sig['bTagweightReshape'] * df_sig['DYstitchWeight']
+            df_bkg['cor_weight'] = df_bkg['trigSF'] * df_bkg['PUjetID_SF'] * \
+                                   df_bkg['L1PreFiringWeight_Nom'] * df_bkg['idAndIsoAndFakeSF'] * \
+                                   df_bkg['bTagweightReshape'] * df_bkg['DYstitchWeight']
             if 'dy' not in bkg_name:
                 df_bkg['weight']     = xs_dict[bkg_name]/nweightedevents * df_bkg['gen_weight'] * df_bkg['cor_weight']
             else:
