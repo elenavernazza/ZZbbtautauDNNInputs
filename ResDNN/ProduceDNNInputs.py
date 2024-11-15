@@ -57,14 +57,14 @@ in_feat   = ['event',
                 'hh_kinfit_chi2', 'hh_kinfit_m', 'sv_mass', 'dR_l1_l2_x_sv_pT', 'l_1_mt', 'l_2_pT', 'dR_l1_l2',
                 'dphi_sv_met', 'h_bb_mass', 'b_2_hhbtag', 'diH_mass_sv', 'dphi_hbb_sv', 'h_bb_pT', 
                 'dR_l1_l2_boosted_htt_met', 'l_1_pT', 'b_1_pT', 'phi', 'costheta_l2_httmet', 
-                'b_1_cvsb', 'b_1_cvsl', 'boosted', 'channel', 'is_vbf', 'jet_1_quality', 'jet_2_quality', 'year']
-weights   = ['genWeight', 'puWeight', 'prescaleWeight', 'trigSF', 'PUjetID_SF']
-# weights   = ['genWeight', 'puWeight', 'prescaleWeight', 'trigSF', 'L1PreFiringWeight_Nom', 'PUjetID_SF']
+                'b_1_cvsb', 'b_1_cvsl', 'boosted_bb', 'boostedTau', 'channel', 'jet_1_quality', 'jet_2_quality', 'year']
+weights   = ['genWeightFixed', 'puWeight', 'trigSF', 'PUjetID_SF', 'DYstitchWeight', 
+             'L1PreFiringWeight_Nom', 'idAndIsoAndFakeSF', 'bTagweightReshape']
 
 cont_feat = ['mass', 'hh_kinfit_chi2', 'hh_kinfit_m', 'sv_mass', 'dR_l1_l2_x_sv_pT', 'l_1_mt', 'l_2_pT', 'dR_l1_l2',
                 'dphi_sv_met', 'h_bb_mass', 'b_2_hhbtag', 'diH_mass_sv', 'dphi_hbb_sv', 'h_bb_pT', 
                 'dR_l1_l2_boosted_htt_met', 'l_1_pT', 'b_1_pT', 'phi', 'costheta_l2_httmet', 'b_1_cvsb', 'b_1_cvsl']
-cat_feat  = ['boosted', 'channel', 'is_vbf', 'jet_1_quality', 'jet_2_quality', 'year']
+cat_feat  = ['boosted_bb', 'boosted_tau', 'channel', 'jet_1_quality', 'jet_2_quality', 'year']
 
 features = in_feat + weights
 
@@ -100,6 +100,18 @@ python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZttHbb_0 \
  --bkg all --json CrossSectionZttHbb.json \
  --base /data_CMS/cms/cuisset/cmt/ --ver ul_2018_ZttHbb_v12 \
  --cat cat_ZttHbb_elliptical_cut_90_sr --prd prod_240312_DNNinput --stat_prd prod_240305 --eos True
+
+python3 ProduceDNNInputs.py --out 2024_11_15/DNNWeight_ZZbbtt_0 \
+ --sig GluGluToXToZZTo2B2Tau_M200,GluGluToXToZZTo2B2Tau_M210,GluGluToXToZZTo2B2Tau_M220,GluGluToXToZZTo2B2Tau_M230,GluGluToXToZZTo2B2Tau_M240,GluGluToXToZZTo2B2Tau_M250,\
+GluGluToXToZZTo2B2Tau_M260,GluGluToXToZZTo2B2Tau_M270,GluGluToXToZZTo2B2Tau_M280,GluGluToXToZZTo2B2Tau_M300,GluGluToXToZZTo2B2Tau_M320,GluGluToXToZZTo2B2Tau_M350,GluGluToXToZZTo2B2Tau_M360,\
+GluGluToXToZZTo2B2Tau_M400,GluGluToXToZZTo2B2Tau_M450,GluGluToXToZZTo2B2Tau_M500,GluGluToXToZZTo2B2Tau_M550,GluGluToXToZZTo2B2Tau_M600,GluGluToXToZZTo2B2Tau_M650,GluGluToXToZZTo2B2Tau_M700,\
+GluGluToXToZZTo2B2Tau_M750,GluGluToXToZZTo2B2Tau_M800,GluGluToXToZZTo2B2Tau_M850,GluGluToXToZZTo2B2Tau_M900,GluGluToXToZZTo2B2Tau_M1000,GluGluToXToZZTo2B2Tau_M1100,GluGluToXToZZTo2B2Tau_M1200,\
+GluGluToXToZZTo2B2Tau_M1300,GluGluToXToZZTo2B2Tau_M1400,GluGluToXToZZTo2B2Tau_M1500,GluGluToXToZZTo2B2Tau_M1600,GluGluToXToZZTo2B2Tau_M1700,GluGluToXToZZTo2B2Tau_M1800,GluGluToXToZZTo2B2Tau_M1900,\
+GluGluToXToZZTo2B2Tau_M2000,GluGluToXToZZTo2B2Tau_M2200,GluGluToXToZZTo2B2Tau_M2400,GluGluToXToZZTo2B2Tau_M2500,GluGluToXToZZTo2B2Tau_M2600,GluGluToXToZZTo2B2Tau_M2800,GluGluToXToZZTo2B2Tau_M3000,\
+GluGluToXToZZTo2B2Tau_M3500,GluGluToXToZZTo2B2Tau_M4000,GluGluToXToZZTo2B2Tau_M4500,GluGluToXToZZTo2B2Tau_M5000 \
+ --bkg all --json CrossSectionZZ.json \
+ --base /grid_mnt/data__data.polcms/cms/cuisset/cmt/ --ver bul_2018_ZZ_v12 \
+ --cat cat_ZZ_elliptical_cut_90_sr --prd prod_241023g_DNNtraining2 --stat_prd prod_241024 --eos True
 
 '''
 
@@ -211,8 +223,10 @@ if __name__ == "__main__" :
             df_sig['xs']         = xs_dict[sig_name]
             df_sig['nev']        = nevents
             df_sig['nev_w']      = nweightedevents
-            df_sig['gen_weight'] = df_sig['genWeight'] * df_sig['puWeight']
-            df_sig['cor_weight'] = df_sig['prescaleWeight'] * df_sig['trigSF'] * df_sig['PUjetID_SF'] # [FIXME] Add DYStitching
+            df_sig['gen_weight'] = df_sig['genWeightFixed'] * df_sig['puWeight']
+            df_sig['cor_weight'] = df_sig['trigSF'] * df_sig['PUjetID_SF'] * \
+                                   df_sig['L1PreFiringWeight_Nom'] * df_sig['idAndIsoAndFakeSF'] * \
+                                   df_sig['bTagweightReshape'] * df_sig['DYstitchWeight']
             df_sig['weight']     = xs_dict[sig_name]/nweightedevents * df_sig['gen_weight'] * df_sig['cor_weight']
             df_sig['sample']     = sig_name
             df_sig['mass']       = mass
@@ -229,10 +243,8 @@ if __name__ == "__main__" :
             except:
                 print(" ### ERROR: Empty dataset")
                 continue
-            if bkg_name != 'dy':
-                stat_file_aux = stat_dir + bkg_name + '_aux/' + options.stat_prd + '/stats.json'
-            else:
-                stat_dir + 'dy_nlo_aux/' + options.stat_prd + '/stats.json'
+            if bkg_name != 'dy':    stat_file_aux = stat_dir + bkg_name + '_aux/' + options.stat_prd + '/stats.json'
+            else:                   stat_dir + 'dy_nlo_aux/' + options.stat_prd + '/stats.json'
             stat_file = stat_dir + bkg_name + '/' + options.stat_prd + '/stats.json'
             if os.path.exists(stat_file_aux): stat_file = stat_file_aux
             with open(stat_file, "r") as f: 
@@ -242,9 +254,14 @@ if __name__ == "__main__" :
             df_bkg['xs']         = xs_dict[bkg_name]
             df_bkg['nev']        = nevents
             df_bkg['nev_w']      = nweightedevents
-            df_bkg['gen_weight'] = df_bkg['genWeight'] * df_bkg['puWeight']
-            df_bkg['cor_weight'] = df_bkg['prescaleWeight'] * df_bkg['trigSF'] * df_bkg['PUjetID_SF'] # * df_bkg['DYstitchEasyWeight']
-            df_bkg['weight']     = xs_dict[bkg_name]/nweightedevents * df_bkg['gen_weight'] * df_bkg['cor_weight']
+            df_bkg['gen_weight'] = df_bkg['genWeightFixed'] * df_bkg['puWeight']
+            df_sig['cor_weight'] = df_sig['trigSF'] * df_sig['PUjetID_SF'] * \
+                                   df_sig['L1PreFiringWeight_Nom'] * df_sig['idAndIsoAndFakeSF'] * \
+                                   df_sig['bTagweightReshape'] * df_sig['DYstitchWeight']
+            if 'dy' not in bkg_name:
+                df_bkg['weight']     = xs_dict[bkg_name]/nweightedevents * df_bkg['gen_weight'] * df_bkg['cor_weight']
+            else:
+                df_bkg['weight']     = xs_dict[bkg_name]/(nweightedevents/nevents) * df_bkg['gen_weight'] * df_bkg['cor_weight']
             df_bkg['sample']     = bkg_name
             df_bkg['mass']       = random.choices(mass_points, k=len(df_bkg))
             df_all_bkg = pd.concat([df_all_bkg, df_bkg], ignore_index=True)
