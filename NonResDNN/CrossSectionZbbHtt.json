@@ -1,8 +1,9 @@
-{
-  "zz_sl": 5.52,
-  "zh_hbb_zll": 0.052,
-  "zh_zbb_htt_signal": 0.0554,
-  "zh_zbb_htt_background": 0.0554,
+{  
+  "zz_sl": 2.389,
+  "zh_ztt_hbb": 0.0161,
+  "zh_ztt_hbb_background": 0.0321,
+  "zh_zbb_htt_signal": 0.0081,
+  "zh_zbb_htt_background": 0.0459,
   "wjets_ht1": 61526.7,
   "wjets_ht2": 1244.0,
   "wjets_ht3": 337.8,

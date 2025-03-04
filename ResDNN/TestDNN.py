@@ -1,5 +1,6 @@
 import sys
 sys.path.append('../')
+sys.path.append('../cms_runII_dnn_resonant/modules')
 from cms_runII_dnn_resonant.modules.data_import import *
 from cms_runII_dnn_resonant.modules.basics import *
 from cms_runII_dnn_resonant.modules.model_export import *
@@ -37,6 +38,8 @@ def load_full_df(fy:FoldYielder) -> pd.DataFrame:
 
 '''
 python3 TestDNN.py --out ResTest1 --run 0 
+
+python3 TestDNN.py --out 2024_11_16/DNNWeight_ZZbbtt_0 --run 0 
 '''
 
 if __name__ == "__main__" :
@@ -69,14 +72,14 @@ if __name__ == "__main__" :
     cont_feat = ['hh_kinfit_chi2', 'hh_kinfit_m', 'sv_mass', 'dR_l1_l2_x_sv_pT', 'l_1_mt', 'l_2_pT', 'dR_l1_l2',
                 'dphi_sv_met', 'h_bb_mass', 'b_2_hhbtag', 'diH_mass_sv', 'dphi_hbb_sv', 'h_bb_pT', 
                 'dR_l1_l2_boosted_htt_met', 'l_1_pT', 'b_1_pT', 'phi', 'costheta_l2_httmet', 'b_1_cvsb', 'b_1_cvsl',
-                'boosted', 'channel', 'is_vbf', 'jet_1_quality', 'jet_2_quality', 'year', 'mass']
+                'boosted_bb', 'boostedTau', 'channel', 'is_vbf', 'jet_1_quality', 'jet_2_quality', 'year', 'mass']
     
     cont_feat_name = [  fr'$\chi^{2}$(KinFit)', fr'$M_{{{pp}}}$(KinFit)', fr'$M_{{{p_tt}}}$(SVFit)', fr'$\Delta R (l_{1},l_{2}) \times p_T$(SVFit)', 
                         fr'$m_T (l_{1})$', fr'$p_T (l_{2})$',  fr'$\Delta R (l_{1},l_{2})$', fr'$\Delta\phi (MET, {{{p_tt}}}$(SVFit)$)$',
                         fr'$M ({{{p_bb}}}_{{bb}})$', fr'HHbtag$(b_{2})$', fr'$M_{{{pp}}}$(SVFit)', fr'$\Delta\phi ({{{p_bb}}}_{{bb}}, {{{p_tt}}}$(SVFit)$)$', 
                         fr'$p_T ({{{p_bb}}}_{{bb}})$', fr'$\Delta R (l_{1},l_{2}) \times (MET+{{{p_tt}}}_{{\tau\tau}})$',
                         fr'$p_T (l_{1})$', fr'$p_T (b_{1})$', fr'$\Phi$', fr'$\cos \Theta \,(l_{2}, (MET+{{{p_tt}}}_{{\tau\tau}}))$', fr'CvsB $(b_{1})$', fr'CvsL $(b_{1})$',
-                        'Boosted', 'Channel', 'VBF', fr'quality $(jet_{1})$', fr'quality $(jet_{2})$', 'Year', 'Mass']
+                        'Boosted bb', fr'Boosted $\tau$', 'Channel', 'VBF', fr'quality $(jet_{1})$', fr'quality $(jet_{2})$', 'Year', 'Mass']
     
     feature_name_dict = dict(zip(cont_feat, cont_feat_name))
 
@@ -144,7 +147,7 @@ if __name__ == "__main__" :
 
         ensemble_0.predict(set_1_fy)
         ensemble_1.predict(set_0_fy)
-
+        
         df_test = load_full_df(fy=set_0_fy).append(load_full_df(fy=set_1_fy))
         df_test.to_hdf(npdir+'/df_test.hdf5', '*')
 
@@ -324,6 +327,8 @@ if __name__ == "__main__" :
     test_masses_1 = glob.glob(indir + '/test_M*_1.hdf5')
     i = 0
     for test_0_imass, test_1_imass in zip(test_masses_0, test_masses_1):
+
+        pdb.set_trace()
 
         i = i + 1
         mass = test_0_imass.split("test_M")[1].split("_0.hdf5")[0]

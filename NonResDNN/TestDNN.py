@@ -1,5 +1,6 @@
 import sys
 sys.path.append('../')
+sys.path.append('../cms_runII_dnn_resonant/modules')
 from cms_runII_dnn_resonant.modules.data_import import *
 from cms_runII_dnn_resonant.modules.basics import *
 from cms_runII_dnn_resonant.modules.model_export import *
@@ -71,14 +72,14 @@ if __name__ == "__main__" :
     cont_feat = ['hh_kinfit_chi2', 'hh_kinfit_m', 'sv_mass', 'dR_l1_l2_x_sv_pT', 'l_1_mt', 'l_2_pT', 'dR_l1_l2',
                 'dphi_sv_met', 'h_bb_mass', 'b_2_hhbtag', 'diH_mass_sv', 'dphi_hbb_sv', 'h_bb_pT', 
                 'dR_l1_l2_boosted_htt_met', 'l_1_pT', 'b_1_pT', 'phi', 'costheta_l2_httmet', 'b_1_cvsb', 'b_1_cvsl',
-                'boosted', 'channel', 'is_vbf', 'jet_1_quality', 'jet_2_quality', 'year']
+                'boosted_bb', 'boostedTau', 'channel', 'is_vbf', 'jet_1_quality', 'jet_2_quality', 'year']
     
     cont_feat_name = [  fr'$\chi^{2}$(KinFit)', fr'$M_{{{pp}}}$(KinFit)', fr'$M_{{{p_tt}}}$(SVFit)', fr'$\Delta R (l_{1},l_{2}) \times p_T$(SVFit)', 
                         fr'$m_T (l_{1})$', fr'$p_T (l_{2})$',  fr'$\Delta R (l_{1},l_{2})$', fr'$\Delta\phi (MET, {{{p_tt}}}$(SVFit)$)$',
                         fr'$M ({{{p_bb}}}_{{bb}})$', fr'HHbtag$(b_{2})$', fr'$M_{{{pp}}}$(SVFit)', fr'$\Delta\phi ({{{p_bb}}}_{{bb}}, {{{p_tt}}}$(SVFit)$)$', 
                         fr'$p_T ({{{p_bb}}}_{{bb}})$', fr'$\Delta R (l_{1},l_{2}) \times (MET+{{{p_tt}}}_{{\tau\tau}})$',
                         fr'$p_T (l_{1})$', fr'$p_T (b_{1})$', fr'$\Phi$', fr'$\cos \Theta \,(l_{2}, (MET+{{{p_tt}}}_{{\tau\tau}}))$', fr'CvsB $(b_{1})$', fr'CvsL $(b_{1})$',
-                        'Boosted', 'Channel', 'VBF', fr'quality $(jet_{1})$', fr'quality $(jet_{2})$', 'Year']
+                        'Boosted bb', fr'Boosted $\tau$', 'Channel', 'VBF', fr'quality $(jet_{1})$', fr'quality $(jet_{2})$', 'Year']
     
     feature_name_dict = dict(zip(cont_feat, cont_feat_name))
 
@@ -127,17 +128,18 @@ if __name__ == "__main__" :
     print(" ### INFO: Reading inputs")
     ################################################
 
+    indir = os.getcwd()+'/'+options.out+'/DNNInputs'
+
     if options.from_file:
         df_test = pd.read_hdf(npdir+'/df_test.hdf5')
         df_train = pd.read_hdf(npdir+'/df_train.hdf5')
-
+    
     else:
         weight_dir = basedir + 'ensemble/'
 
         ensemble_0 = Ensemble.from_save(weight_dir + f'selected_set_0_{run_name}')
         ensemble_1 = Ensemble.from_save(weight_dir + f'selected_set_1_{run_name}')
 
-        indir = os.getcwd()+'/'+options.out+'/DNNInputs'
         inpath = Path(indir)
 
         set_0_fy = FoldYielder(inpath/'test_0.hdf5', input_pipe=inpath/'input_pipe_0.pkl')
@@ -255,7 +257,7 @@ if __name__ == "__main__" :
     DNNscore_sig_train = df_mutau_train[df_mutau_train['gen_target'] == 1]['pred']
     DNNscore_bkg_train = df_mutau_train[df_mutau_train['gen_target'] == 0]['pred']
 
-    PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "MuuTau", "$\\tau_{\\mu}\\tau_{h}$")
+    PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "MuTau", "$\\tau_{\\mu}\\tau_{h}$")
     PlotTrainTestDNNDistribution(DNNscore_sig, DNNscore_bkg, DNNscore_sig_train, DNNscore_bkg_train, binning, fancy_name, "MuTau", "$\\tau_{\\mu}\\tau_{h}$")
 
     Train_ROC_sig_mutau, Train_ROC_bkg_mutau = GetROC(DNNscore_sig, DNNscore_bkg)

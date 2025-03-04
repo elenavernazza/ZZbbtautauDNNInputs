@@ -24,12 +24,13 @@ from lumin.plotting.data_viewing import plot_feat
 
 def read_root_file(filename, tree_name, features):
     root_file = uproot.open(filename)
+    pdb.set_trace()
     try:
         tree = root_file[tree_name]
         if len(tree) != 0:
             return tree.arrays(features, library="pd")
     except uproot.exceptions.KeyInFileError:
-        print(f"'{tree_name}' does not exist in the ROOT file: {filename}.")
+        print(f" ### ERROR in reading tree '{tree_name}' in the ROOT file: {filename}. Skipping.")
 
 def check_weights(df:pd.DataFrame) -> None:
     v = []
@@ -57,14 +58,14 @@ in_feat   = ['event',
                 'hh_kinfit_chi2', 'hh_kinfit_m', 'sv_mass', 'dR_l1_l2_x_sv_pT', 'l_1_mt', 'l_2_pT', 'dR_l1_l2',
                 'dphi_sv_met', 'h_bb_mass', 'b_2_hhbtag', 'diH_mass_sv', 'dphi_hbb_sv', 'h_bb_pT', 
                 'dR_l1_l2_boosted_htt_met', 'l_1_pT', 'b_1_pT', 'phi', 'costheta_l2_httmet', 
-                'b_1_cvsb', 'b_1_cvsl', 'boosted', 'channel', 'is_vbf', 'jet_1_quality', 'jet_2_quality', 'year']
-weights   = ['genWeight', 'puWeight', 'prescaleWeight', 'trigSF', 'PUjetID_SF']
-# weights   = ['genWeight', 'puWeight', 'prescaleWeight', 'trigSF', 'L1PreFiringWeight_Nom', 'PUjetID_SF']
+                'b_1_cvsb', 'b_1_cvsl', 'boosted_bb', 'boostedTau', 'channel', 'jet_1_quality', 'jet_2_quality', 'year']
+weights   = ['genWeightFixed', 'puWeight', 'trigSF', 'PUjetID_SF', 'DYstitchWeight', 
+             'L1PreFiringWeight_Nom', 'idAndIsoAndFakeSF', 'bTagweightReshape_smeared']
 
 cont_feat = ['hh_kinfit_chi2', 'hh_kinfit_m', 'sv_mass', 'dR_l1_l2_x_sv_pT', 'l_1_mt', 'l_2_pT', 'dR_l1_l2',
                 'dphi_sv_met', 'h_bb_mass', 'b_2_hhbtag', 'diH_mass_sv', 'dphi_hbb_sv', 'h_bb_pT', 
                 'dR_l1_l2_boosted_htt_met', 'l_1_pT', 'b_1_pT', 'phi', 'costheta_l2_httmet', 'b_1_cvsb', 'b_1_cvsl']
-cat_feat  = ['boosted', 'channel', 'is_vbf', 'jet_1_quality', 'jet_2_quality', 'year']
+cat_feat  = ['boosted_bb', 'boostedTau', 'channel', 'jet_1_quality', 'jet_2_quality', 'year']
 
 features = in_feat + weights
 
@@ -197,8 +198,10 @@ if __name__ == "__main__" :
         df_sig['xs']         = xs_dict[sig_name]
         df_sig['nev']        = nevents
         df_sig['nev_w']      = nweightedevents
-        df_sig['gen_weight'] = df_sig['genWeight'] * df_sig['puWeight']
-        df_sig['cor_weight'] = df_sig['prescaleWeight'] * df_sig['trigSF'] * df_sig['PUjetID_SF'] # * df_sig['DYstitchEasyWeight']
+        df_sig['gen_weight'] = df_sig['genWeightFixed'] * df_sig['puWeight']
+        df_sig['cor_weight'] = df_sig['trigSF'] * df_sig['PUjetID_SF'] * \
+                                df_sig['L1PreFiringWeight_Nom'] * df_sig['idAndIsoAndFakeSF'] * \
+                                df_sig['DYstitchWeight'] * df_sig['bTagweightReshape_smeared']
         df_sig['weight']     = xs_dict[sig_name]/nweightedevents * df_sig['gen_weight'] * df_sig['cor_weight']
         df_sig['sample']     = sig_name
         df_all_sig = pd.concat([df_all_sig, df_sig], ignore_index=True)
@@ -226,9 +229,14 @@ if __name__ == "__main__" :
             df_bkg['xs']         = xs_dict[bkg_name]
             df_bkg['nev']        = nevents
             df_bkg['nev_w']      = nweightedevents
-            df_bkg['gen_weight'] = df_bkg['genWeight'] * df_bkg['puWeight']
-            df_bkg['cor_weight'] = df_bkg['prescaleWeight'] * df_bkg['trigSF'] * df_bkg['PUjetID_SF'] # * df_bkg['DYstitchEasyWeight']
-            df_bkg['weight']     = xs_dict[bkg_name]/nweightedevents * df_bkg['gen_weight'] * df_bkg['cor_weight']
+            df_bkg['gen_weight'] = df_bkg['genWeightFixed'] * df_bkg['puWeight']
+            df_bkg['cor_weight'] = df_bkg['trigSF'] * df_bkg['PUjetID_SF'] * \
+                                   df_bkg['L1PreFiringWeight_Nom'] * df_bkg['idAndIsoAndFakeSF'] * \
+                                   df_sig['DYstitchWeight'] * df_sig['bTagweightReshape_smeared']
+            if 'dy' not in bkg_name:
+                df_bkg['weight']     = xs_dict[bkg_name]/nweightedevents * df_bkg['gen_weight'] * df_bkg['cor_weight']
+            else:
+                df_bkg['weight']     = xs_dict[bkg_name]/(nweightedevents/nevents) * df_bkg['gen_weight'] * df_bkg['cor_weight']
             df_bkg['sample']     = bkg_name
             df_all_bkg = pd.concat([df_all_bkg, df_bkg], ignore_index=True)
             del data_frames

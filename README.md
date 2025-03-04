@@ -21,6 +21,49 @@ cd NonResDNN
 ```
 
 <details>
+<summary>FullRun2 NonResDNN commands with Boosted Taus</summary>
+
+```bash
+
+python3 ProduceDNNInputs.py --out 2025_03_04/DNNWeight_ZZbbtt_FullRun2_0 --sig zz_sl_signal --bkg all --json CrossSectionZZ.json \
+ --base /grid_mnt/data__data.polcms/cms/cuisset/cmt/ --ver bul_2016_ZZ_v12,bul_2016_HIPM_ZZ_v12,bul_2017_ZZ_v12,bul_2018_ZZ_v12 \
+ --cat cat_ZZ_elliptical_cut_90_sr --prd prod_241213c_DNNtraining2 --stat_prd prod_241024 | tee ZZbbtt.log
+python3 ProduceDNNInputs.py --out 2025_03_04/DNNWeight_ZbbHtt_FullRun2_0 --sig zh_zbb_htt_signal --bkg all --json CrossSectionZbbHtt.json \
+ --base /grid_mnt/data__data.polcms/cms/cuisset/cmt/ --ver bul_2016_ZbbHtt_v12,bul_2016_HIPM_ZbbHtt_v12,bul_2017_ZbbHtt_v12,bul_2018_ZbbHtt_v12 \
+ --cat cat_ZbbHtt_OC90_sr --prd prod_241213c_DNNtraining2 --stat_prd prod_241024 | tee ZbbHtt.log
+python3 ProduceDNNInputs.py --out 2025_03_04/DNNWeight_ZttHbb_FullRun2_0 --sig zh_ztt_hbb_signal --bkg all --json CrossSectionZttHbb.json \
+ --base /grid_mnt/data__data.polcms/cms/cuisset/cmt/ --ver bul_2016_ZttHbb_v12,bul_2016_HIPM_ZttHbb_v12,bul_2017_ZttHbb_v12,bul_2018_ZttHbb_v12 \
+ --cat cat_ZttHbb_OC90_sr --prd prod_241213c_DNNtraining2 --stat_prd prod_241024 | tee ZttHbb.log
+```
+
+```bash
+python3 TrainDNN.py --out 2025_03_04/DNNWeight_ZZbbtt_FullRun2_0 --run 0 --num 0 | tee 2025_03_04/DNNWeight_ZZbbtt_FullRun2_0/training_0.log
+python3 TrainDNN.py --out 2025_03_04/DNNWeight_ZZbbtt_FullRun2_0 --run 0 --num 1 | tee 2025_03_04/DNNWeight_ZZbbtt_FullRun2_0/training_1.log
+
+python3 TrainDNN.py --out 2025_03_04/DNNWeight_ZbbHtt_FullRun2_0 --run 0 --num 0 | tee 2025_03_04/DNNWeight_ZbbHtt_FullRun2_0/training_0.log
+python3 TrainDNN.py --out 2025_03_04/DNNWeight_ZbbHtt_FullRun2_0 --run 0 --num 1 | tee 2025_03_04/DNNWeight_ZbbHtt_FullRun2_0/training_1.log
+ 
+python3 TrainDNN.py --out 2025_03_04/DNNWeight_ZttHbb_FullRun2_0 --run 0 --num 0 | tee 2025_03_04/DNNWeight_ZttHbb_FullRun2_0/training_0.log
+python3 TrainDNN.py --out 2025_03_04/DNNWeight_ZttHbb_FullRun2_0 --run 0 --num 1 | tee 2025_03_04/DNNWeight_ZttHbb_FullRun2_0/training_1.log
+```
+
+```bash
+python3 TestDNN.py --out 2025_03_04/DNNWeight_ZZbbtt_FullRun2_0 --run 0 
+python3 TestDNN.py --out 2025_03_04/DNNWeight_ZbbHtt_FullRun2_0 --run 0
+python3 TestDNN.py --out 2025_03_04/DNNWeight_ZttHbb_FullRun2_0 --run 0
+```
+
+```bash
+conda activate lumin_3.7
+python3 SaveDNN.py --out 2025_03_04/DNNWeight_ZZbbtt_FullRun2_0 --run 0 --name ZZbbtt --fold 2025-01-09
+python3 SaveDNN.py --out 2025_03_04/DNNWeight_ZbbHtt_FullRun2_0 --run 0 --name ZbbHtt --fold 2025-01-09
+python3 SaveDNN.py --out 2025_03_04/DNNWeight_ZttHbb_FullRun2_0 --run 0 --name ZttHbb --fold 2025-01-09
+```
+
+
+</details>
+
+<details>
 <summary>FullRun2 NonResDNN commands</summary>
 
 ```bash
