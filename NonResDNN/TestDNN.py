@@ -188,6 +188,9 @@ if __name__ == "__main__" :
         i_h_DNNscore_bkg = np.array([np.sum(h_DNNscore_bkg_norm[bin_c >= i]) for i in binning])
         return i_h_DNNscore_sig, i_h_DNNscore_bkg
 
+    def GetROCArea(ROC_bkg, ROC_sig):
+        return - np.trapz(ROC_sig, ROC_bkg)
+
     #################################################
     # Inclusive
     #################################################
@@ -218,13 +221,124 @@ if __name__ == "__main__" :
         plt.savefig(odir + f'/DNNScore_TrainTest_{channel}_log.pdf')
         plt.close()
 
+    #################################################
+    # 9x9 matrix of DNN histograms
+    # for each combination of channel and category
+    #################################################
+
+    def transform_x (x):
+        """ Apply logit transformation: log(x / (1-x)) """
+        x = np.clip(x, 1e-6, 1 - 1e-6)  # Avoid log(0) or division by zero
+        return np.log(x / (1 - x))
+
+    sig_test = (df_test['gen_target'] == 1)
+    bkg_test = (df_test['gen_target'] == 0)
+    sig_train = (df_train['gen_target'] == 1)
+    bkg_train = (df_train['gen_target'] == 0)
+
+    cat_names = ['Resolved b - Resolved $\\tau$', 'Boosted b - Resolved $\\tau$', 'Boosted b - Boosted $\\tau$']
+    ch_names = ["$\\tau_{e}\\tau_{h}$", "$\\tau_{\\mu}\\tau_{h}$", "$\\tau_{h}\\tau_{h}$"]
+    
+    size1 = 14
+    size2 = 18
+
+    fig, axs = plt.subplots(3, 3, figsize=(21, 21))
+    
+    for i_cat, category in enumerate([[0,0], [1,0], [1,1]]):
+
+        cat_test = (df_test['boosted_bb'] == category[0]) & (df_test['boostedTau'] == category[1])
+        cat_train = (df_train['boosted_bb'] == category[0]) & (df_train['boostedTau'] == category[1])
+
+        for i_ch, channel in enumerate([2, 1, 0]):
+
+            ch_test = (df_test['channel'] == channel)
+            ch_train = (df_train['channel'] == channel)
+
+            ax = axs[i_cat, i_ch]
+
+            DNNscore_sig = df_test[sig_test & cat_test & ch_test]['pred']
+            DNNscore_bkg = df_test[bkg_test & cat_test & ch_test]['pred']
+            DNNscore_sig_train = df_train[sig_train & cat_train & ch_train]['pred']
+            DNNscore_bkg_train = df_train[bkg_train & cat_train & ch_train]['pred']
+
+            ax.hist(DNNscore_sig, bins=binning, density=True, linewidth=2, histtype='step', color='blue', label='Signal Testing')
+            ax.hist(DNNscore_sig_train, bins=binning, density=True, linestyle='--', linewidth=2, histtype='step', color='darkblue', label='Signal Training')
+            ax.hist(DNNscore_bkg, bins=binning, density=True, linewidth=2, histtype='step', color='red', label='Background Testing')
+            ax.hist(DNNscore_bkg_train, bins=binning, density=True, linestyle='--', linewidth=2, histtype='step', color='darkred', label='Background Training')
+            
+            ax.set_title(f'{cat_names[i_cat]} -- {ch_names[i_ch]}', fontsize=size2)
+            ax.legend(loc='upper center', fontsize=size1, title_fontsize=size1, ncol=2)
+            ax.set_xlabel(r"DNN Score", fontsize=size2)
+            ax.set_ylabel("A.U.", fontsize=size2)
+            ax.set_yscale('log')
+            ax.grid()
+            for xtick in ax.xaxis.get_major_ticks():
+                xtick.set_pad(10)
+
+    fig.suptitle(fancy_name, fontsize=30)
+    plt.tight_layout()
+
+    print(' ### INFO: Saving ', odir + f'/DNNScore_TrainTest.png')
+    plt.savefig(odir + f'/DNNScore_TrainTest.png')
+    plt.savefig(odir + f'/DNNScore_TrainTest.pdf')
+    plt.close()
+
+    #################################################
+    # 9x9 matrix of DNN ROC curves
+    # for each combination of channel and category
+    #################################################
+
+    fig, axs = plt.subplots(3, 3, figsize=(21, 21))
+
+    for i_cat, category in enumerate([[0,0], [1,0], [1,1]]):
+
+        cat_test = (df_test['boosted_bb'] == category[0]) & (df_test['boostedTau'] == category[1])
+        cat_train = (df_train['boosted_bb'] == category[0]) & (df_train['boostedTau'] == category[1])
+
+        for i_ch, channel in enumerate([2, 1, 0]):
+
+            ch_test = (df_test['channel'] == channel)
+            ch_train = (df_train['channel'] == channel)
+
+            ax = axs[i_cat, i_ch]
+
+            DNNscore_sig = df_test[sig_test & cat_test & ch_test]['pred']
+            DNNscore_bkg = df_test[bkg_test & cat_test & ch_test]['pred']
+            DNNscore_sig_train = df_train[sig_train & cat_train & ch_train]['pred']
+            DNNscore_bkg_train = df_train[bkg_train & cat_train & ch_train]['pred']
+
+            Train_ROC_sig, Train_ROC_bkg = GetROC(DNNscore_sig, DNNscore_bkg)
+            Test_ROC_sig, Test_ROC_bkg = GetROC(DNNscore_sig_train, DNNscore_bkg_train)
+
+            ax.plot(Train_ROC_bkg, Train_ROC_sig, marker='o', linestyle='--', label=f'Training: {GetROCArea(Train_ROC_bkg, Train_ROC_sig):.3f}', color=cmap(1/5))
+            ax.plot(Test_ROC_bkg, Test_ROC_sig, marker='v', linestyle='--', label=f'Testing: {GetROCArea(Test_ROC_bkg, Test_ROC_sig):.3f}', color=cmap(3/5))
+            ax.set_title(f'{cat_names[i_cat]} -- {ch_names[i_ch]}', fontsize=size2)
+            ax.legend(loc='lower right', fontsize=size1, title='AUROC', title_fontsize=size1, ncol=2)
+            ax.set_xlabel("BKG Efficiency", fontsize=size2)
+            ax.set_ylabel("SIG Efficiency", fontsize=size2)
+            ax.grid()
+            for xtick in ax.xaxis.get_major_ticks():
+                xtick.set_pad(10)
+
+    fig.suptitle(fancy_name, fontsize=30)
+    plt.tight_layout()
+
+    print(' ### INFO: Saving ', odir + f'/DNN_ROCcurve.png')
+    plt.savefig(odir + f'/DNN_ROCcurve.png')
+    plt.savefig(odir + f'/DNN_ROCcurve.pdf')
+    plt.close()
+
+    #################################################
+    # Inclusive
+    #################################################
+
     DNNscore_sig = df_test[df_test['gen_target'] == 1]['pred']
     DNNscore_bkg = df_test[df_test['gen_target'] == 0]['pred']
     DNNscore_sig_train = df_train[df_train['gen_target'] == 1]['pred']
     DNNscore_bkg_train = df_train[df_train['gen_target'] == 0]['pred']
 
-    PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "Inclusive", "Inclusive")
-    PlotTrainTestDNNDistribution(DNNscore_sig, DNNscore_bkg, DNNscore_sig_train, DNNscore_bkg_train, binning, fancy_name, "Inclusive", "Inclusive")
+    # PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "Inclusive", "Inclusive")
+    PlotTrainTestDNNDistribution(DNNscore_sig, DNNscore_bkg, DNNscore_sig_train, DNNscore_bkg_train, binning, fancy_name, "All", "Inclusive")
 
     Train_ROC_sig, Train_ROC_bkg = GetROC(DNNscore_sig, DNNscore_bkg)
     Test_ROC_sig, Test_ROC_bkg = GetROC(DNNscore_sig_train, DNNscore_bkg_train)
@@ -240,7 +354,7 @@ if __name__ == "__main__" :
     DNNscore_sig_train = df_etau_train[df_etau_train['gen_target'] == 1]['pred']
     DNNscore_bkg_train = df_etau_train[df_etau_train['gen_target'] == 0]['pred']
 
-    PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "ETau", "$\\tau_{e}\\tau_{h}$")
+    # PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "ETau", "$\\tau_{e}\\tau_{h}$")
     PlotTrainTestDNNDistribution(DNNscore_sig, DNNscore_bkg, DNNscore_sig_train, DNNscore_bkg_train, binning, fancy_name, "ETau", "$\\tau_{e}\\tau_{h}$")
 
     Train_ROC_sig_etau, Train_ROC_bkg_etau = GetROC(DNNscore_sig, DNNscore_bkg)
@@ -257,7 +371,7 @@ if __name__ == "__main__" :
     DNNscore_sig_train = df_mutau_train[df_mutau_train['gen_target'] == 1]['pred']
     DNNscore_bkg_train = df_mutau_train[df_mutau_train['gen_target'] == 0]['pred']
 
-    PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "MuTau", "$\\tau_{\\mu}\\tau_{h}$")
+    # PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "MuTau", "$\\tau_{\\mu}\\tau_{h}$")
     PlotTrainTestDNNDistribution(DNNscore_sig, DNNscore_bkg, DNNscore_sig_train, DNNscore_bkg_train, binning, fancy_name, "MuTau", "$\\tau_{\\mu}\\tau_{h}$")
 
     Train_ROC_sig_mutau, Train_ROC_bkg_mutau = GetROC(DNNscore_sig, DNNscore_bkg)
@@ -274,7 +388,7 @@ if __name__ == "__main__" :
     DNNscore_sig_train = df_tautau_train[df_tautau_train['gen_target'] == 1]['pred']
     DNNscore_bkg_train = df_tautau_train[df_tautau_train['gen_target'] == 0]['pred']
 
-    PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "TauTau", "$\\tau_{h}\\tau_{h}$")
+    # PlotDNNDistribution(DNNscore_sig, DNNscore_bkg, binning, fancy_name, "TauTau", "$\\tau_{h}\\tau_{h}$")
     PlotTrainTestDNNDistribution(DNNscore_sig, DNNscore_bkg, DNNscore_sig_train, DNNscore_bkg_train, binning, fancy_name, "TauTau", "$\\tau_{h}\\tau_{h}$")
 
     Test_ROC_sig_tautau, Test_ROC_bkg_tautau = GetROC(DNNscore_sig, DNNscore_bkg)
@@ -284,9 +398,6 @@ if __name__ == "__main__" :
     # ROC CURVES
     #################################################
 
-    def GetROCArea(ROC_bkg, ROC_sig):
-        return - np.trapz(ROC_sig, ROC_bkg)
-
     cmap = plt.get_cmap('viridis')
     fig, ax = plt.subplots(figsize=(10,10))
     plt.plot(Train_ROC_bkg, Train_ROC_sig, marker='o', linestyle='--', label=f'Inclusive: {GetROCArea(Train_ROC_bkg, Train_ROC_sig):.3f}', color=cmap(1/5))
@@ -295,11 +406,11 @@ if __name__ == "__main__" :
     plt.plot(Train_ROC_bkg_tautau, Train_ROC_sig_tautau, marker='o', linestyle='--', label=f'TauTau: {GetROCArea(Train_ROC_bkg_tautau, Train_ROC_sig_tautau):.3f}', color=cmap(4/5))
     SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_title=fancy_name + ": [AUROC]", leg_loc='lower right')
     plt.grid()
-    plt.savefig(odir + '/ROCcurve.png')
-    plt.savefig(odir + '/ROCcurve.pdf')
+    plt.savefig(odir + '/DNN_ROCcurve_Comparison.png')
+    plt.savefig(odir + '/DNN_ROCcurve_Comparison.pdf')
     # plt.yscale('log')
-    # plt.savefig(odir + '/ROCcurve_log.png')
-    # plt.savefig(odir + '/ROCcurve_log.pdf')
+    # plt.savefig(odir + '/DNN_ROCcurve_log.png')
+    # plt.savefig(odir + '/DNN_ROCcurve_log.pdf')
     plt.close()
 
     def CompareTrainTestROC(Train_bkg, Train_sig, Test_bkg, Test_sig, channel, fancy_channel):
@@ -319,8 +430,8 @@ if __name__ == "__main__" :
         # ax2.grid()
         # ax2.set_ylim(0.95,1.05)
         # mplhep.cms.label(data=False, rlabel='137 $fb^{-1}$ (13 TeV)', fontsize=20, ax=ax1)
-        # plt.savefig(odir + f'/ROCcurve_{channel}.png')
-        # plt.savefig(odir + f'/ROCcurve_{channel}.pdf')
+        # plt.savefig(odir + f'/DNN_ROCcurve_{channel}.png')
+        # plt.savefig(odir + f'/DNN_ROCcurve_{channel}.pdf')
         # plt.close()
 
         cmap = plt.get_cmap('plasma')
@@ -329,16 +440,16 @@ if __name__ == "__main__" :
         plt.plot(Test_bkg, Test_sig, marker='v', linestyle='--', label=f'Testing: {GetROCArea(Test_bkg, Test_sig):.3f}', color=cmap(3/5))
         SetStyle(ax, x_label=r"BKG Efficiency", y_label=r"SIG Efficiency", leg_title=fancy_name + f" {fancy_channel}: [AUROC]", leg_loc='lower right')
         plt.grid()
-        plt.savefig(odir + f'/ROCcurve_{channel}.png')
-        plt.savefig(odir + f'/ROCcurve_{channel}.pdf')
+        plt.savefig(odir + f'/DNN_ROCcurve_{channel}.png')
+        plt.savefig(odir + f'/DNN_ROCcurve_{channel}.pdf')
         plt.close()
 
-    CompareTrainTestROC(Train_ROC_bkg, Train_ROC_sig, Test_ROC_bkg, Test_ROC_sig, 'Inclusive', 'Inclusive')
+    CompareTrainTestROC(Train_ROC_bkg, Train_ROC_sig, Test_ROC_bkg, Test_ROC_sig, 'All', 'Inclusive')
     CompareTrainTestROC(Train_ROC_bkg_etau, Train_ROC_sig_etau, Test_ROC_bkg_etau, Test_ROC_sig_etau, 'ETau', "$\\tau_{e}\\tau_{h}$")
     CompareTrainTestROC(Train_ROC_bkg_mutau, Train_ROC_sig_mutau, Test_ROC_bkg_mutau, Test_ROC_sig_mutau, 'MuTau', "$\\tau_{\\mu}\\tau_{h}$")
     CompareTrainTestROC(Train_ROC_bkg_tautau, Train_ROC_sig_tautau, Test_ROC_bkg_tautau, Test_ROC_sig_tautau, 'TauTau', "$\\tau_{h}\\tau_{h}$")
 
-    eos_dir = f'/eos/user/e/evernazz/www/ZZbbtautau/B2GPlots/2024_06_14/{o_name}/DNNPlots/NonRes'
+    eos_dir = f'/eos/user/e/evernazz/www/ZZbbtautau/B2GPlots/2025_03_04/{o_name}/DNNPlots/NonRes'
     user = 'evernazz'
     print(f" ### INFO: Copy results to {user}@lxplus.cern.ch")
     print(f"           Inside directory {eos_dir}\n")
