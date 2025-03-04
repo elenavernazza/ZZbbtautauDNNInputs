@@ -66,6 +66,60 @@ cd ResDNN
 ```
 
 <details>
+<summary>FullRun2 ResDNN commands with Boosted Taus</summary>
+
+```bash
+python3 -u ProduceDNNInputs.py --out 2025_01_09/DNNWeight_ZZbbtt_0 \
+ --sig GluGluToXToZZTo2B2Tau_M200,GluGluToXToZZTo2B2Tau_M210,GluGluToXToZZTo2B2Tau_M220,GluGluToXToZZTo2B2Tau_M230,GluGluToXToZZTo2B2Tau_M240,GluGluToXToZZTo2B2Tau_M250,GluGluToXToZZTo2B2Tau_M260,GluGluToXToZZTo2B2Tau_M270,GluGluToXToZZTo2B2Tau_M280,GluGluToXToZZTo2B2Tau_M300,GluGluToXToZZTo2B2Tau_M320,GluGluToXToZZTo2B2Tau_M350,GluGluToXToZZTo2B2Tau_M360,GluGluToXToZZTo2B2Tau_M400,GluGluToXToZZTo2B2Tau_M450,GluGluToXToZZTo2B2Tau_M500,GluGluToXToZZTo2B2Tau_M550,GluGluToXToZZTo2B2Tau_M600,GluGluToXToZZTo2B2Tau_M650,GluGluToXToZZTo2B2Tau_M700,GluGluToXToZZTo2B2Tau_M750,GluGluToXToZZTo2B2Tau_M800,GluGluToXToZZTo2B2Tau_M850,GluGluToXToZZTo2B2Tau_M900,GluGluToXToZZTo2B2Tau_M1000,GluGluToXToZZTo2B2Tau_M1100,GluGluToXToZZTo2B2Tau_M1200,GluGluToXToZZTo2B2Tau_M1300,GluGluToXToZZTo2B2Tau_M1400,GluGluToXToZZTo2B2Tau_M1500,GluGluToXToZZTo2B2Tau_M1600,GluGluToXToZZTo2B2Tau_M1700,GluGluToXToZZTo2B2Tau_M1800,GluGluToXToZZTo2B2Tau_M1900,GluGluToXToZZTo2B2Tau_M2000,GluGluToXToZZTo2B2Tau_M2200,GluGluToXToZZTo2B2Tau_M2400,GluGluToXToZZTo2B2Tau_M2500,GluGluToXToZZTo2B2Tau_M2600,GluGluToXToZZTo2B2Tau_M2800,GluGluToXToZZTo2B2Tau_M3000,GluGluToXToZZTo2B2Tau_M3500,GluGluToXToZZTo2B2Tau_M4000,GluGluToXToZZTo2B2Tau_M4500,GluGluToXToZZTo2B2Tau_M5000 \
+ --bkg all --json CrossSectionZZ.json \
+ --base /grid_mnt/data__data.polcms/cms/cuisset/cmt/ --ver bul_2016_ZZ_v12,bul_2016_HIPM_ZZ_v12,bul_2017_ZZ_v12,bul_2018_ZZ_v12 \
+ --cat cat_ZZ_elliptical_cut_90_sr --prd prod_241213c_DNNtraining2 --stat_prd prod_241024 | tee ZZbbtt.log
+
+python3 -u ProduceDNNInputs.py --out 2025_01_09/DNNWeight_ZbbHtt_0 \
+ --sig ZprimeToZH_ZToBB_HToTauTau_M500,ZprimeToZH_ZToBB_HToTauTau_M600,ZprimeToZH_ZToBB_HToTauTau_M700,ZprimeToZH_ZToBB_HToTauTau_M800,ZprimeToZH_ZToBB_HToTauTau_M1000,ZprimeToZH_ZToBB_HToTauTau_M1200,ZprimeToZH_ZToBB_HToTauTau_M1400,ZprimeToZH_ZToBB_HToTauTau_M1600,ZprimeToZH_ZToBB_HToTauTau_M1800,ZprimeToZH_ZToBB_HToTauTau_M2000,ZprimeToZH_ZToBB_HToTauTau_M2500,ZprimeToZH_ZToBB_HToTauTau_M3000,ZprimeToZH_ZToBB_HToTauTau_M3500,ZprimeToZH_ZToBB_HToTauTau_M4000,ZprimeToZH_ZToBB_HToTauTau_M4500,ZprimeToZH_ZToBB_HToTauTau_M5000,ZprimeToZH_ZToBB_HToTauTau_M5500,ZprimeToZH_ZToBB_HToTauTau_M6000 \
+ --bkg all --json CrossSectionZbbHtt.json \
+ --base /grid_mnt/data__data.polcms/cms/cuisset/cmt/ --ver bul_2016_ZbbHtt_v12,bul_2016_HIPM_ZbbHtt_v12,bul_2017_ZbbHtt_v12,bul_2018_ZbbHtt_v12 \
+ --cat cat_ZbbHtt_OC90_sr --prd prod_241213c_DNNtraining2 --stat_prd prod_241024 | tee ZbbHtt.log
+
+python3 -u ProduceDNNInputs.py --out 2025_01_09/DNNWeight_ZttHbb_0 \
+ --sig ZprimeToZH_ZToTauTau_HToBB_M500,ZprimeToZH_ZToTauTau_HToBB_M600,ZprimeToZH_ZToTauTau_HToBB_M700,ZprimeToZH_ZToTauTau_HToBB_M800,ZprimeToZH_ZToTauTau_HToBB_M1000,ZprimeToZH_ZToTauTau_HToBB_M1200,ZprimeToZH_ZToTauTau_HToBB_M1400,ZprimeToZH_ZToTauTau_HToBB_M1600,ZprimeToZH_ZToTauTau_HToBB_M1800,ZprimeToZH_ZToTauTau_HToBB_M2000,ZprimeToZH_ZToTauTau_HToBB_M2500,ZprimeToZH_ZToTauTau_HToBB_M3000,ZprimeToZH_ZToTauTau_HToBB_M3500,ZprimeToZH_ZToTauTau_HToBB_M4000,ZprimeToZH_ZToTauTau_HToBB_M4500,ZprimeToZH_ZToTauTau_HToBB_M5000,ZprimeToZH_ZToTauTau_HToBB_M5500,ZprimeToZH_ZToTauTau_HToBB_M6000 \
+ --bkg all --json CrossSectionZttHbb.json \
+ --base /grid_mnt/data__data.polcms/cms/cuisset/cmt/ --ver bul_2016_ZttHbb_v12,bul_2016_HIPM_ZttHbb_v12,bul_2017_ZttHbb_v12,bul_2018_ZttHbb_v12 \
+ --cat cat_ZttHbb_OC90_sr --prd prod_241213c_DNNtraining2 --stat_prd prod_241024 | tee ZttHbb.log
+```
+
+```bash
+python3 -u TrainDNN.py --out 2025_01_09/DNNWeight_ZZbbtt_0 --run 0 --num 0 | tee 2025_01_09/DNNWeight_ZZbbtt_0/training_0.log
+python3 -u TrainDNN.py --out 2025_01_09/DNNWeight_ZZbbtt_0 --run 0 --num 1 | tee 2025_01_09/DNNWeight_ZZbbtt_0/training_1.log
+
+python3 -u TrainDNN.py --out 2025_01_09/DNNWeight_ZbbHtt_0 --run 0 --num 0 | tee 2025_01_09/DNNWeight_ZbbHtt_0/training_0.log
+python3 -u TrainDNN.py --out 2025_01_09/DNNWeight_ZbbHtt_0 --run 0 --num 1 | tee 2025_01_09/DNNWeight_ZbbHtt_0/training_1.log
+
+python3 -u TrainDNN.py --out 2025_01_09/DNNWeight_ZttHbb_0 --run 0 --num 0 | tee 2025_01_09/DNNWeight_ZttHbb_0/training_0.log
+python3 -u TrainDNN.py --out 2025_01_09/DNNWeight_ZttHbb_0 --run 0 --num 1 | tee 2025_01_09/DNNWeight_ZttHbb_0/training_1.log
+```
+
+```bash
+python3 TestDNN.py --out 2025_01_09/DNNWeight_ZZbbtt_0 --run 0
+
+python3 TestDNN.py --out 2025_01_09/DNNWeight_ZbbHtt_0 --run 0
+
+python3 TestDNN.py --out 2025_01_09/DNNWeight_ZttHbb_0 --run 0
+```
+
+```bash
+conda activate lumin_3.7
+python3 SaveDNN.py --out 2025_01_09/DNNWeight_ZZbbtt_0 --run 0 --name ResZZbbtt --fold 2025-01-09
+
+python3 SaveDNN.py --out 2025_01_09/DNNWeight_ZbbHtt_0 --run 0 --name ResZbbHtt --fold 2025-01-09
+
+python3 SaveDNN.py --out 2025_01_09/DNNWeight_ZttHbb_0 --run 0 --name ResZttHbb --fold 2025-01-09
+
+```
+
+</details>
+
+<details>
 <summary>FullRun2 ResDNN commands</summary>
 
 ```bash

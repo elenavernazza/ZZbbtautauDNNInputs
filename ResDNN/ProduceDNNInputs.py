@@ -24,12 +24,13 @@ from lumin.plotting.data_viewing import plot_feat
 
 def read_root_file(filename, tree_name, features):
     root_file = uproot.open(filename)
+    # pdb.set_trace()
     try:
         tree = root_file[tree_name]
         if len(tree) != 0:
             return tree.arrays(features, library="pd")
     except uproot.exceptions.KeyInFileError:
-        print(f"'{tree_name}' does not exist in the ROOT file: {filename}.")
+        print(f" ### ERROR in reading tree '{tree_name}' in the ROOT file: {filename}. Skipping.")
 
 def check_weights(df:pd.DataFrame) -> None:
     v = []
@@ -59,12 +60,12 @@ in_feat   = ['event',
                 'dR_l1_l2_boosted_htt_met', 'l_1_pT', 'b_1_pT', 'phi', 'costheta_l2_httmet', 
                 'b_1_cvsb', 'b_1_cvsl', 'boosted_bb', 'boostedTau', 'channel', 'jet_1_quality', 'jet_2_quality', 'year']
 weights   = ['genWeightFixed', 'puWeight', 'trigSF', 'PUjetID_SF', 'DYstitchWeight', 
-             'L1PreFiringWeight_Nom', 'idAndIsoAndFakeSF', 'bTagweightReshape']
+             'L1PreFiringWeight_Nom', 'idAndIsoAndFakeSF', 'bTagweightReshape_smeared']
 
 cont_feat = ['mass', 'hh_kinfit_chi2', 'hh_kinfit_m', 'sv_mass', 'dR_l1_l2_x_sv_pT', 'l_1_mt', 'l_2_pT', 'dR_l1_l2',
                 'dphi_sv_met', 'h_bb_mass', 'b_2_hhbtag', 'diH_mass_sv', 'dphi_hbb_sv', 'h_bb_pT', 
                 'dR_l1_l2_boosted_htt_met', 'l_1_pT', 'b_1_pT', 'phi', 'costheta_l2_httmet', 'b_1_cvsb', 'b_1_cvsl']
-cat_feat  = ['boosted_bb', 'boosted_tau', 'channel', 'jet_1_quality', 'jet_2_quality', 'year']
+cat_feat  = ['boosted_bb', 'boostedTau', 'channel', 'jet_1_quality', 'jet_2_quality', 'year']
 
 features = in_feat + weights
 
@@ -101,7 +102,7 @@ python3 ProduceDNNInputs.py --out 2024_03_26/DNNWeight_ZttHbb_0 \
  --base /data_CMS/cms/cuisset/cmt/ --ver ul_2018_ZttHbb_v12 \
  --cat cat_ZttHbb_elliptical_cut_90_sr --prd prod_240312_DNNinput --stat_prd prod_240305 --eos True
 
-python3 ProduceDNNInputs.py --out 2024_11_15/DNNWeight_ZZbbtt_0 \
+python3 ProduceDNNInputs.py --out 2024_11_16/DNNWeight_ZZbbtt_0 \
  --sig GluGluToXToZZTo2B2Tau_M200,GluGluToXToZZTo2B2Tau_M210,GluGluToXToZZTo2B2Tau_M220,GluGluToXToZZTo2B2Tau_M230,GluGluToXToZZTo2B2Tau_M240,GluGluToXToZZTo2B2Tau_M250,\
 GluGluToXToZZTo2B2Tau_M260,GluGluToXToZZTo2B2Tau_M270,GluGluToXToZZTo2B2Tau_M280,GluGluToXToZZTo2B2Tau_M300,GluGluToXToZZTo2B2Tau_M320,GluGluToXToZZTo2B2Tau_M350,GluGluToXToZZTo2B2Tau_M360,\
 GluGluToXToZZTo2B2Tau_M400,GluGluToXToZZTo2B2Tau_M450,GluGluToXToZZTo2B2Tau_M500,GluGluToXToZZTo2B2Tau_M550,GluGluToXToZZTo2B2Tau_M600,GluGluToXToZZTo2B2Tau_M650,GluGluToXToZZTo2B2Tau_M700,\
@@ -111,7 +112,9 @@ GluGluToXToZZTo2B2Tau_M2000,GluGluToXToZZTo2B2Tau_M2200,GluGluToXToZZTo2B2Tau_M2
 GluGluToXToZZTo2B2Tau_M3500,GluGluToXToZZTo2B2Tau_M4000,GluGluToXToZZTo2B2Tau_M4500,GluGluToXToZZTo2B2Tau_M5000 \
  --bkg all --json CrossSectionZZ.json \
  --base /grid_mnt/data__data.polcms/cms/cuisset/cmt/ --ver bul_2018_ZZ_v12 \
- --cat cat_ZZ_elliptical_cut_90_sr --prd prod_241023g_DNNtraining2 --stat_prd prod_241024 --eos True
+ --cat cat_ZZ_elliptical_cut_90_sr --prd prod_241023g_DNNtraining3 --stat_prd prod_241024 --eos True
+
+# to get log file : python -u myscript.py | tee myoutput.log
 
 '''
 
@@ -226,7 +229,7 @@ if __name__ == "__main__" :
             df_sig['gen_weight'] = df_sig['genWeightFixed'] * df_sig['puWeight']
             df_sig['cor_weight'] = df_sig['trigSF'] * df_sig['PUjetID_SF'] * \
                                    df_sig['L1PreFiringWeight_Nom'] * df_sig['idAndIsoAndFakeSF'] * \
-                                   df_sig['bTagweightReshape'] * df_sig['DYstitchWeight']
+                                   df_sig['DYstitchWeight'] * df_sig['bTagweightReshape_smeared']
             df_sig['weight']     = xs_dict[sig_name]/nweightedevents * df_sig['gen_weight'] * df_sig['cor_weight']
             df_sig['sample']     = sig_name
             df_sig['mass']       = mass
@@ -257,7 +260,7 @@ if __name__ == "__main__" :
             df_bkg['gen_weight'] = df_bkg['genWeightFixed'] * df_bkg['puWeight']
             df_bkg['cor_weight'] = df_bkg['trigSF'] * df_bkg['PUjetID_SF'] * \
                                    df_bkg['L1PreFiringWeight_Nom'] * df_bkg['idAndIsoAndFakeSF'] * \
-                                   df_bkg['bTagweightReshape'] * df_bkg['DYstitchWeight']
+                                   df_sig['DYstitchWeight'] * df_sig['bTagweightReshape_smeared']
             if 'dy' not in bkg_name:
                 df_bkg['weight']     = xs_dict[bkg_name]/nweightedevents * df_bkg['gen_weight'] * df_bkg['cor_weight']
             else:
@@ -396,7 +399,6 @@ if __name__ == "__main__" :
         os.system('cp /eos/home-e/evernazz/www/index.php /eos/home-e/evernazz/www/ZZbbtautau/DNNResFeaturePlots/' + o_name)
         os.system('cp /eos/home-e/evernazz/www/index.php ' + wwwdir)
         for feature in cont_feat:
-            if feature == "mass": continue
             save_name = wwwdir + '/TrainFeat_' + feature
             plot_feat(set_0_train_weight, feature, cuts=[(set_0_train_weight.Class==1),(set_0_train_weight.Class==0)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=a)
             plot_feat(set_0_train_weight, feature, cuts=[(set_0_train_weight.Class==1),(set_0_train_weight.Class==0)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=b)
@@ -404,7 +406,6 @@ if __name__ == "__main__" :
         os.system('mkdir -p ' + wwwdir)
         os.system('cp /eos/home-e/evernazz/www/index.php ' + wwwdir)
         for feature in cont_feat:
-            if feature == "mass": continue
             save_name = wwwdir + '/TrainFeat_' + feature
             plot_feat(set_1_train_weight, feature, cuts=[(set_1_train_weight.Class==1),(set_1_train_weight.Class==0)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=a)
             plot_feat(set_1_train_weight, feature, cuts=[(set_1_train_weight.Class==1),(set_1_train_weight.Class==0)], labels=['Sig','Bkg'], wgt_name='weight', savename=save_name, settings=b)
@@ -415,7 +416,7 @@ if __name__ == "__main__" :
         pp = 'ZH'; p_tt = 'H'; p_bb = 'Z'
     elif "ZttHbb" in options.ver:
         pp = 'ZH'; p_tt = 'Z'; p_bb = 'H'
-    cont_feat_name = [  fr'$\chi^{2}$(KinFit)', fr'$M_{{{pp}}}$(KinFit)', fr'$M_{{{p_tt}}}$(SVFit)', fr'$\Delta R (l_{1},l_{2}) \times p_T$(SVFit)', 
+    cont_feat_name = [  'Mass', fr'$\chi^{2}$(KinFit)', fr'$M_{{{pp}}}$(KinFit)', fr'$M_{{{p_tt}}}$(SVFit)', fr'$\Delta R (l_{1},l_{2}) \times p_T$(SVFit)', 
                         fr'$m_T (l_{1})$', fr'$p_T (l_{2})$',  fr'$\Delta R (l_{1},l_{2})$', fr'$\Delta\phi (MET, {{{p_tt}}}$(SVFit)$)$',
                         fr'$M ({{{p_bb}}}_{{bb}})$', fr'HHbtag$(b_{2})$', fr'$M_{{{pp}}}$(SVFit)', fr'$\Delta\phi ({{{p_bb}}}_{{bb}}, {{{p_tt}}}$(SVFit)$)$', 
                         fr'$p_T ({{{p_bb}}}_{{bb}})$', fr'$\Delta R (l_{1},l_{2}) \times (MET+{{{p_tt}}}_{{\tau\tau}})$',

@@ -1,5 +1,7 @@
 {
+  "ZprimeToZH_ZToBB_HToTauTau_M500": 1,
   "ZprimeToZH_ZToBB_HToTauTau_M600": 1,
+  "ZprimeToZH_ZToBB_HToTauTau_M700": 1,
   "ZprimeToZH_ZToBB_HToTauTau_M800": 1,
   "ZprimeToZH_ZToBB_HToTauTau_M1000": 1,
   "ZprimeToZH_ZToBB_HToTauTau_M1200": 1,
@@ -11,10 +13,15 @@
   "ZprimeToZH_ZToBB_HToTauTau_M3000": 1,
   "ZprimeToZH_ZToBB_HToTauTau_M3500": 1,
   "ZprimeToZH_ZToBB_HToTauTau_M4000": 1,
-  "zz_sl": 2.3331506672,
-  "zh_hbb_zll": 0.0472,
-  "zh_zbb_htt_signal": 0.01727465875,
-  "zh_zbb_htt_background": 0.02992534125,
+  "ZprimeToZH_ZToBB_HToTauTau_M4500": 1,
+  "ZprimeToZH_ZToBB_HToTauTau_M5000": 1,
+  "ZprimeToZH_ZToBB_HToTauTau_M5500": 1,
+  "ZprimeToZH_ZToBB_HToTauTau_M6000": 1,
+  "zz_sl": 2.389,
+  "zh_ztt_hbb": 0.0161,
+  "zh_ztt_hbb_background": 0.0321,
+  "zh_zbb_htt": 0.0081,
+  "zh_zbb_htt_background": 0.0459,
   "wjets_ht1": 61526.7,
   "wjets_ht2": 1244.0,
   "wjets_ht3": 337.8,
@@ -66,5 +73,5 @@
   "tth_tautau": 0.031805,
   "ggH_ZZ": 28.87,
   "ggf_sm": 0.002268
-
+  
 }
