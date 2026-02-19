@@ -334,9 +334,11 @@ pip install Keras-Preprocessing==1.1.2
 pip install numpy==1.21.5
 pip install onnx==1.8.0
 pip install onnx-tf==1.3.0
+pip install onnx2pytorch==0.3.0
 pip install protobuf==3.19.4
 pip install tensorboard==1.15.0
 pip install tensorflow==1.15.0
+pip install tensorflow-probability==0.8
 pip install torch==1.6.0
 pip install torchvision==0.7.0
 pip install lumin
